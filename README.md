@@ -1,0 +1,1 @@
+# CE-QUAL-W2-HAB-Capabilities
