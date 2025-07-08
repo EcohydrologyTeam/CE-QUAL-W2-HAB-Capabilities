@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <VisualStudioUserFile ProjectCreator="Intel Fortran" Keyword="Win32 Application" Version="11.0" ProjectIdGuid="{67BCEB4E-1875-44B5-B6DE-06E83F427036}">
 	<Configurations>
-		<Configuration Name="Debug|Win32" WorkingDirectory="C:\Scott\research\Chester Morse Lake and Cedar River Seattle Public Utilities\Review 2024 Geosyntec\ModelFiles\v0_2_(v0_0--convert_con_with_utility) - Copy">
+		<Configuration Name="Debug|Win32" WorkingDirectory="C:\Scott\research\corps of engineers\tomcole\w2code\web download\code test v4.5\Examples\BonnevilleDam with TDG computed using SYSTDG">
 		</Configuration>
 		<Configuration Name="Release|Win32" WorkingDirectory="C:\Scott\research\corps of engineers\tomcole\w2code\Version 4.3\DeGray Reservoir_ExcelControlFIle_4.5">
 		</Configuration>
-		<Configuration Name="Debug|x64" WorkingDirectory="C:\Scott\research\corps of engineers\tomcole\w2code\web download\code test v4.5\Examples\DeGray Reservoir with sediment diagenesis and vertical algae migration">
+		<Configuration Name="Debug|x64" WorkingDirectory="C:\Scott\research\corps of engineers\tomcole\w2code\web download\code test v4.5\Examples\Columbia Slough Estuary">
 		</Configuration>
-		<Configuration Name="Release|x64" WorkingDirectory="C:\Scott\research\Central Arizona Project\PSU Model Files\Model scenario 1 - 3 models\Upstream - water level at all gates - seperate WBs at pumps\US1">
+		<Configuration Name="Release|x64" WorkingDirectory="C:\Scott\research\Oroville-Thermalito\StructuralSimulationModel\Long-term model tests\Afterbay">
 		</Configuration>
 	</Configurations></VisualStudioUserFile>

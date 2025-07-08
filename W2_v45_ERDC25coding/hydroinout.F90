@@ -542,14 +542,8 @@ USE GLOBAL;     USE NAMESC; USE GEOMC;  USE LOGICC; USE PREC;  USE SURFHE;  USE 
       YSTS  = YST
       DTPS  = DTP
       QOLDS = QOLD
-      
-      CALL PIPE_FLOW        
+      CALL PIPE_FLOW        ! (NIT)
       DO JP=1,NPI
-          !if(qpi(jp) /= qpi(jp))then
-          !    write(WRN,*)'QPI NAN and set to zero on JDAY:',jday,' qold=',qold,' ys(2,1)=',ys(2,1),' vs(1,1)=',vs(1,1),' dtp(1)=',dtp(1)
-          !    qpi(jp)=0.0;ys=0.0;vs=0.0;vst=0.0;yst=0.0;qold=0.0;dtp=0.0;yss=0.0;vss=0.0;vsts=0.0;ysts=0.0;qolds=0.0;dtps=0.0
-          !endif
-          
        
         if(dynpipe(jp) == '      ON')then                     ! SW 5/10/10
         qpi(jp)=qpi(jp)*bp(jp)

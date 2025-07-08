@@ -33,13 +33,7 @@
 !**  for any damages,including incidental or consequential damages, arising                                                       **
 !**  from use or misuse of this model, or from results achieved or conclusions drawn by others.  Distribution of this model is    **
 !**  restricted by the Export Administration Act of 1969,  50 app. USC subsections 2401-2420, as amended, and other applicable    **
-!**  laws or regulations.                                            
-!
-!MIT License Copyright (c) 2023 drswells
-!Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-!The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-!THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-!OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                                             **
+!**  laws or regulations.                                                                                                         **
 !**                                                                                                                               **
 !***********************************************************************************************************************************
 
@@ -107,7 +101,7 @@ MODULE GLOBAL
   REAL(R8),   TARGET,ALLOCATABLE, DIMENSION(:,:,:)   :: C1,     C2,     C1S,    CSSB,   CSSK
   REAL(R8),   TARGET,ALLOCATABLE, DIMENSION(:,:,:)   :: KF,     CD
   REAL(R8),   TARGET,ALLOCATABLE, DIMENSION(:,:,:)   :: HYD
-  REAL(R8),       TARGET,ALLOCATABLE, DIMENSION(:,:,:,:) :: AF,     EF
+  REAL,       TARGET,ALLOCATABLE, DIMENSION(:,:,:,:) :: AF,     EF
   REAL(R8),          ALLOCATABLE, DIMENSION(:)       :: ICETH,  ELKT,   HMULT,  CMULT,  CDMULT, WIND2,  AZMAX,  PALT, Z0
   REAL,              ALLOCATABLE, DIMENSION(:)       :: TN_SEDSOD_NH4,NH3GASLOSS,TP_SEDSOD_PO4,TPOUT,TPTRIB,TPDTRIB,TPWD,TPPR,TPIN,TNOUT,TNTRIB,TNDTRIB,TNWD,TNPR,TNIN,ATMDEP_P,ATMDEP_N   !TP_SEDBURIAL,TN_SEDBURIAL,
   REAL(R8),          ALLOCATABLE, DIMENSION(:,:)     :: QSS,    VOLUH2, VOLDH2, QUH1,   QDH1,   UXBR,   UYBR,   VOL
@@ -115,6 +109,7 @@ MODULE GLOBAL
   REAL,              ALLOCATABLE, DIMENSION(:,:,:)   :: ELLIM,  EPLIM,  ENLIM,  ESLIM
   INTEGER                                            :: W2ERR=33,  WRN=32
   INTEGER                                            :: IMX,    KMX,    NBR,    NTR,    NWD,    NWB,    NCT,    NBOD, NTR1     ! SW 2/17/2021
+  INTEGER                                            :: NHF                             !> sch 28Jan2025. Algal harvesting option variable. Number of segements with user-specified algal harvesting fractions.
   INTEGER                                            :: NST,    NSP,    NGT,    NPI,    NPU,    NWDO,   NIKTSR, NUNIT
   INTEGER                                            :: JW,     JB,     JC,     IU,     ID,     KT,     I,      JJB
   INTEGER                                            :: NOD,    NDC=27, NAL,    NSS,    NHY=15, NFL=142,NEP,    NEPT
@@ -206,11 +201,13 @@ MODULE TVDC
   REAL(R8),              ALLOCATABLE, DIMENSION(:,:)     :: CIN,    CTR,    CDTR,   CPR,    CIND,   TUH,    TDH,    QOUT
   REAL(R8),              ALLOCATABLE, DIMENSION(:,:,:)   :: CUH,    CDH
   REAL(R8),              ALLOCATABLE, DIMENSION(:)       :: QWD,    QWDSAV                                                !SR 06/29/2021
+  REAL(R8),              ALLOCATABLE, DIMENSION(:)       :: FHA,    FHASAV                !> sch 29Jan2025. Algal harvesting option variable. Using withdrawal capability as template for harvesting option (see QWD, QWDSAV)
   INTEGER                                            :: NAC,    NOPEN
   INTEGER,           ALLOCATABLE, DIMENSION(:)       :: NACPR,  NACIN,  NACDT,  NACTR,  NACD,   CN, CDNN
   INTEGER,           ALLOCATABLE, DIMENSION(:,:)     :: TRCN,   INCN,   DTCN,   PRCN
   LOGICAL                                            :: CONSTITUENTS
   CHARACTER(72)                                      :: QGTFN,  QWDFN,  WSCFN,  SHDFN
+  CHARACTER(72)                                      :: HAFFN                             !> sch 29Jan2025. Algal harvesting option variable. Filename for time-series of user-specified algal harvesting fractions.
   CHARACTER(72),     ALLOCATABLE, DIMENSION(:)       :: METFN,  QOTFN,  QINFN,  TINFN,  CINFN,  QTRFN,  TTRFN,  CTRFN,  QDTFN
   CHARACTER(72),     ALLOCATABLE, DIMENSION(:)       :: TDTFN,  CDTFN,  PREFN,  TPRFN,  CPRFN,  EUHFN,  TUHFN,  CUHFN,  EDHFN
   CHARACTER(72),     ALLOCATABLE, DIMENSION(:)       :: EXTFN,  CDHFN,  TDHFN
@@ -220,6 +217,7 @@ MODULE TVDC
 END MODULE TVDC
 MODULE KINETIC
   USE PREC
+  REAL                                               :: O2LIM, ALG_O2LIM, ALG_MIN           !> sch 25Jan2025. Low DO - high algal mortality option variables. 
   REAL                                               :: KDO, PCO2,PCO2ATMPPM   ! SW 8/16/2020          
   REAL(R8)                                           :: O2CH4, O2H2S, O2FE2, O2MN2
   REAL(R8),    ALLOCATABLE, DIMENSION(:)             :: CoeffA_Turb, CoeffB_Turb,SECC_PAR 
@@ -236,50 +234,50 @@ MODULE KINETIC
   REAL(R8),    POINTER,           DIMENSION(:,:)     :: AGESS, BACTSS, DISGSS
   REAL(R8),    POINTER,           DIMENSION(:,:)     :: RDOMSS, LPOMSS, RPOMSS, DOSS,   TICSS,  CASS
   REAL(R8),    POINTER,           DIMENSION(:,:)     :: ALKSS          ! enhanced pH buffering
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: PH,     CO2   ,    HCO3,   CO3
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: TN,     TP,     TKN
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: DON,    DOP,    DOC,    NH3
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: PON,    POP,    POC
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: TON,    TOP,    TOC
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: APR,    CHLA,   ATOT
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: O2DG, TDG, TURB, SECCHID
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: SSSI,   SSSO,   TISS,   TOTSS
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: PO4AR,  PO4AG,  PO4AP,  PO4SD,  PO4SR,  PO4NS,  PO4POM, PO4DOM, PO4OM
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: CH4SR, H2SSR, FEIISR, MNIISR
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: PO4ER,  PO4EG,  PO4EP,  TICEP,  DOEP,   DOER
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: NH4ER,  NH4EG,  NH4EP,  NO3EG,  DSIEG,  LDOMEP, LPOMEP
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: NH4AR,  NH4AG,  NH4AP,  NH4SD,  NH4SR,  NH4D,   NH4POM, NH4DOM, NH4OM, NH3GAS
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: NO3AG,  NO3D,   NO3SED
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: DSIAG,  DSID,   DSISD,  DSISR,  DSIS
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: PSIAM,  PSID,   PSINS
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: FENS,   FESR
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: LDOMAP, LDOMD,  LRDOMD, RDOMD
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: LPOMAP, LPOMD,  LRPOMD, RPOMD,  LPOMNS, RPOMNS
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: DOAP,   DOAR,   DODOM,  DOPOM,  DOOM,   DONIT
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: DOSED,  DOSOD,  DOBOD,  DOAE
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: CBODU,  CBODDK, TICAP
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: SEDD,   SODD,   SEDAS,  SEDOMS, SEDNS
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: SEDD1,SEDD2   
+  REAL,    POINTER,               DIMENSION(:,:)     :: PH,     CO2   ,    HCO3,   CO3
+  REAL,    POINTER,               DIMENSION(:,:)     :: TN,     TP,     TKN
+  REAL,    POINTER,               DIMENSION(:,:)     :: DON,    DOP,    DOC,    NH3
+  REAL,    POINTER,               DIMENSION(:,:)     :: PON,    POP,    POC
+  REAL,    POINTER,               DIMENSION(:,:)     :: TON,    TOP,    TOC
+  REAL,    POINTER,               DIMENSION(:,:)     :: APR,    CHLA,   ATOT
+  REAL,    POINTER,               DIMENSION(:,:)     :: O2DG, TDG, TURB, SECCHID
+  REAL,    POINTER,               DIMENSION(:,:)     :: SSSI,   SSSO,   TISS,   TOTSS
+  REAL,    POINTER,               DIMENSION(:,:)     :: PO4AR,  PO4AG,  PO4AP,  PO4SD,  PO4SR,  PO4NS,  PO4POM, PO4DOM, PO4OM
+  REAL,    POINTER,               DIMENSION(:,:)     :: CH4SR, H2SSR, FEIISR, MNIISR
+  REAL,    POINTER,               DIMENSION(:,:)     :: PO4ER,  PO4EG,  PO4EP,  TICEP,  DOEP,   DOER
+  REAL,    POINTER,               DIMENSION(:,:)     :: NH4ER,  NH4EG,  NH4EP,  NO3EG,  DSIEG,  LDOMEP, LPOMEP
+  REAL,    POINTER,               DIMENSION(:,:)     :: NH4AR,  NH4AG,  NH4AP,  NH4SD,  NH4SR,  NH4D,   NH4POM, NH4DOM, NH4OM, NH3GAS
+  REAL,    POINTER,               DIMENSION(:,:)     :: NO3AG,  NO3D,   NO3SED
+  REAL,    POINTER,               DIMENSION(:,:)     :: DSIAG,  DSID,   DSISD,  DSISR,  DSIS
+  REAL,    POINTER,               DIMENSION(:,:)     :: PSIAM,  PSID,   PSINS
+  REAL,    POINTER,               DIMENSION(:,:)     :: FENS,   FESR
+  REAL,    POINTER,               DIMENSION(:,:)     :: LDOMAP, LDOMD,  LRDOMD, RDOMD
+  REAL,    POINTER,               DIMENSION(:,:)     :: LPOMAP, LPOMD,  LRPOMD, RPOMD,  LPOMNS, RPOMNS
+  REAL,    POINTER,               DIMENSION(:,:)     :: DOAP,   DOAR,   DODOM,  DOPOM,  DOOM,   DONIT
+  REAL,    POINTER,               DIMENSION(:,:)     :: DOSED,  DOSOD,  DOBOD,  DOAE
+  REAL,    POINTER,               DIMENSION(:,:)     :: CBODU,  CBODDK, TICAP
+  REAL,    POINTER,               DIMENSION(:,:)     :: SEDD,   SODD,   SEDAS,  SEDOMS, SEDNS
+  REAL,    POINTER,               DIMENSION(:,:)     :: SEDD1,SEDD2   
   REAL(R8),POINTER,               DIMENSION(:,:,:)   :: SS,     ALG,    CBOD,   CG
   REAL(R8),POINTER,               DIMENSION(:,:,:)   :: SSSS,   ASS,    CBODSS, CGSS
-  REAL(R8),    POINTER,               DIMENSION(:,:,:)   :: AGR,    ARR,    AER,    AMR,    ASR
-  REAL(R8),    POINTER,               DIMENSION(:,:,:)   :: EGR,    ERR,    EER,    EMR,    EBR
+  REAL,    POINTER,               DIMENSION(:,:,:)   :: AGR,    ARR,    AER,    AMR,    ASR
+  REAL,    POINTER,               DIMENSION(:,:,:)   :: EGR,    ERR,    EER,    EMR,    EBR
   REAL(R8),POINTER,               DIMENSION(:,:)     :: LDOMP,  RDOMP,  LPOMP,  RPOMP,  LDOMN,  RDOMN,  LPOMN,  RPOMN
   REAL(R8),POINTER,               DIMENSION(:,:)     :: LDOMPSS,  RDOMPSS, LPOMPSS, RPOMPSS, LDOMNSS, RDOMNSS
   REAL(R8),POINTER,               DIMENSION(:,:)     :: LPOMNSS,  RPOMNSS
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: LDOMPAP,  LDOMPEP, LPOMPAP, LPOMPNS, RPOMPNS
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: LDOMNAP,  LDOMNEP, LPOMNAP, LPOMNNS, RPOMNNS
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: SEDDP,    SEDASP,  SEDOMSP, SEDNSP,  LPOMEPP
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: SEDDN,    SEDASN,  SEDOMSN, SEDNSN,  LPOMEPN, SEDNO3
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: SEDDC,    SEDASC,  SEDOMSC, SEDNSC,  LPOMEPC
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: CBODNS,   SEDCB,   SEDCBP,  SEDCBN,  SEDCBC
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: SEDBR,    SEDBRP,  SEDBRC,  SEDBRN, CO2REAER        !CB 11/30/06
+  REAL,    POINTER,               DIMENSION(:,:)     :: LDOMPAP,  LDOMPEP, LPOMPAP, LPOMPNS, RPOMPNS
+  REAL,    POINTER,               DIMENSION(:,:)     :: LDOMNAP,  LDOMNEP, LPOMNAP, LPOMNNS, RPOMNNS
+  REAL,    POINTER,               DIMENSION(:,:)     :: SEDDP,    SEDASP,  SEDOMSP, SEDNSP,  LPOMEPP
+  REAL,    POINTER,               DIMENSION(:,:)     :: SEDDN,    SEDASN,  SEDOMSN, SEDNSN,  LPOMEPN, SEDNO3
+  REAL,    POINTER,               DIMENSION(:,:)     :: SEDDC,    SEDASC,  SEDOMSC, SEDNSC,  LPOMEPC
+  REAL,    POINTER,               DIMENSION(:,:)     :: CBODNS,   SEDCB,   SEDCBP,  SEDCBN,  SEDCBC
+  REAL,    POINTER,               DIMENSION(:,:)     :: SEDBR,    SEDBRP,  SEDBRC,  SEDBRN, CO2REAER        !CB 11/30/06
   REAL(R8),POINTER,               DIMENSION(:,:,:)   :: CBODP,    CBODN       ! CB 6/6/10
   REAL(R8),POINTER,               DIMENSION(:,:,:)   :: CBODPSS,    CBODNSS       ! CB 6/6/10
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: CBODNSP,  CBODNSN          ! cb 6/6/10
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: DOH2S,DOCH4,DOSEDIA, DOFE2
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: H2SREAER,CH4REAER,CH4D,H2SD,SDINC,SDINP,SDINN,H2SSEDD
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: FE2D,SDINFEOOH,SDINMNO2,MN2D,DOMN2
+  REAL,    POINTER,               DIMENSION(:,:)     :: CBODNSP,  CBODNSN          ! cb 6/6/10
+  REAL,    POINTER,               DIMENSION(:,:)     :: DOH2S,DOCH4,DOSEDIA, DOFE2
+  REAL,    POINTER,               DIMENSION(:,:)     :: H2SREAER,CH4REAER,CH4D,H2SD,SDINC,SDINP,SDINN,H2SSEDD
+  REAL,    POINTER,               DIMENSION(:,:)     :: FE2D,SDINFEOOH,SDINMNO2,MN2D,DOMN2
   REAL,              ALLOCATABLE, DIMENSION(:,:,:)   :: EPM,    EPD,    EPC
   REAL,              ALLOCATABLE, DIMENSION(:)       :: CGQ10,  CG0DK,  CG1DK,  CGS, CGLDK, CGKLF, CGCS, CGR  !LCJ 2/26/15 SW 10/16/15
   REAL,              ALLOCATABLE, DIMENSION(:)       :: SOD,    SDK,    LPOMDK, RPOMDK, LDOMDK, RDOMDK, LRDDK,  LRPDK
@@ -311,6 +309,9 @@ MODULE KINETIC
   REAL(R8),          ALLOCATABLE, DIMENSION(:)       :: WIND10, CZ,     QC,     QERR
   REAL,              ALLOCATABLE, DIMENSION(:)       :: REAER,  RCOEF1, RCOEF2, RCOEF3, RCOEF4, DGPO2, MINKL
   REAL,              ALLOCATABLE, DIMENSION(:,:)     :: DO1,    DO2,    DO3,    GAMMA, F_NH3
+  REAL,              ALLOCATABLE, DIMENSION(:,:)     :: DO4,    DELT_LOW_DO       !> sch 25Jan2025. Low DO - high mortality option variables.
+  REAL,              ALLOCATABLE, DIMENSION(:)       :: CRIT_T, AM_LOW_DO         !> sch 25Jan2025. Low DO - high mortality option variables.
+  REAL,              ALLOCATABLE, DIMENSION(:)       :: CRIT_TIN                  !> sch 25Jan2025. Alternative N-fixation option variable.  !, CRIT_NFIX_ALG  ** minimum crop is sort of duplicative, not needed here. Discuss later. sh
   REAL,              ALLOCATABLE, DIMENSION(:,:)     :: SED,    FPSS,   FPFE, FE
   REAL,              ALLOCATABLE, DIMENSION(:,:)     :: SED1,sed2,SED1ic,sed2ic   ! cb 6/17/17
   REAL,              ALLOCATABLE, DIMENSION(:,:,:)   :: CBODD
@@ -421,7 +422,8 @@ MODULE TDGAS
 END MODULE TDGAS
 MODULE LOGICC
   LOGICAL                                        :: SUSP_SOLIDS,        OXYGEN_DEMAND,    UPDATE_GRAPH,     INITIALIZE_GRAPH
-  LOGICAL                                        :: WITHDRAWALS,        TRIBUTARIES,      GATES, PIPES  
+  LOGICAL                                        :: WITHDRAWALS,        TRIBUTARIES,      GATES, PIPES
+  LOGICAL                                        :: HARVESTING          !> sch 29Jan2025. Algal harvesting option logic switch.
   LOGICAL,           ALLOCATABLE, DIMENSION(:)   :: NO_WIND,            NO_INFLOW,        NO_OUTFLOW,       NO_HEAT
   LOGICAL,           ALLOCATABLE, DIMENSION(:)   :: UPWIND,             ULTIMATE,         FRESH_WATER,      SALT_WATER
   LOGICAL,           ALLOCATABLE, DIMENSION(:)   :: LIMITING_DLT,       TERM_BY_TERM,     MANNINGS_N,       PH_CALC
@@ -434,6 +436,7 @@ MODULE LOGICC
   LOGICAL,           ALLOCATABLE, DIMENSION(:)   :: DAM_INFLOW,         DAM_OUTFLOW                                    !TC 08/03/04
   LOGICAL,           ALLOCATABLE, DIMENSION(:)   :: INTERP_METEOROLOGY, INTERP_INFLOW,    INTERP_DTRIBS,    INTERP_TRIBS
   LOGICAL,           ALLOCATABLE, DIMENSION(:)   :: INTERP_WITHDRAWAL,  INTERP_HEAD,      INTERP_EXTINCTION
+  LOGICAL,           ALLOCATABLE, DIMENSION(:)   :: INTERP_HARVESTING   !> sch 29Jan2025. Algal harvesting optin logic array switch for interpolation option.
   LOGICAL,           ALLOCATABLE, DIMENSION(:)   :: VISCOSITY_LIMIT,    CELERITY_LIMIT,   IMPLICIT_AZ,      TRAPEZOIDAL !SW 07/16/04
 !  LOGICAL,           ALLOCATABLE, DIMENSION(:)   :: HYDRO_PLOT,         CONSTITUENT_PLOT, DERIVED_PLOT
   LOGICAL,           ALLOCATABLE, DIMENSION(:)   :: INTERP_GATE     ! cb 8/13/2010
@@ -467,9 +470,8 @@ MODULE EDDY
   LOGICAL,           ALLOCATABLE, DIMENSION(:)      :: STRICKON, TKELATPRD
 END MODULE EDDY
 MODULE MACROPHYTEC
-USE PREC
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: NH4MR,  NH4MG,  LDOMMAC, RPOMMAC, LPOMMAC, DOMP, DOMR, TICMC
-  REAL(R8),    POINTER,               DIMENSION(:,:)     :: PO4MR,  PO4MG
+  REAL,    POINTER,               DIMENSION(:,:)     :: NH4MR,  NH4MG,  LDOMMAC, RPOMMAC, LPOMMAC, DOMP, DOMR, TICMC
+  REAL,    POINTER,               DIMENSION(:,:)     :: PO4MR,  PO4MG
   REAL,              ALLOCATABLE, DIMENSION(:)       :: MG,     MR,     MM, MMAX,   MBMP
   REAL,              ALLOCATABLE, DIMENSION(:)       :: MT1,    MT2,    MT3,    MT4,    MK1,    MK2,    MK3,    MK4
   REAL,              ALLOCATABLE, DIMENSION(:)       :: MP,     MN,     MC
@@ -571,6 +573,7 @@ Module MAIN
   INTEGER       :: NBODCS, NBODCE, NBODPS, NBODPE, NBODNS, NBODNE, IBOD, JCB       ! cb 6/6/10
   INTEGER       :: JF,JA,JM,JE,JJZ,K,L3,L1,L2,NTAC,NDSP,NTACMX,NTACMN,JFILE,M
   INTEGER       :: KBP,JWR,JJJB,JDAYNX,NIT1,JWD,L,IUT,IDT    !,KTIP - NOT NEEDED SW 7/8/2024
+  INTEGER       :: JHA          !> sch 29Jan2025. Algal harvesting option variable. Used as a counter.
   INTEGER       :: INCRIS,IE,II,NDLT,NRS,INCR,IS,JAC
   REAL          :: JDAYTS, JDAY1, TMSTRT, TMEND,HMAX, DLXMAX,CELRTY,NXTVD,TTIME
   REAL(R8)      :: DLMR, TICE                        ! SW 4/19/10
@@ -606,6 +609,10 @@ Module MAIN
   CHARACTER(72) :: WDOFN,  RSOFN,  TSRFN, SEGNUM, LINE, SEGNUM2, TSRFN1
   LOGICAL       :: RETLOG, STANDING_BIOMASS_DECAY, PHBUFF_EXIST, WATER_AGE_ACTIVE ! SW 5/26/15  SR 7/27/2017
   LOGICAL       :: DYNPIPEADJUST            ! SW 2/18/2020
+  LOGICAL       :: LOW_DO_MORTALITY_EXIST                        !> sch 28Jan2025. Logic variables for low DO algal mortality option input file.
+  LOGICAL       :: NFIX_OPTION_EXIST                             !> sch 28Jan2025. Logic variable for N-fixation alternative option input file.
+  LOGICAL       :: HARVEST_OPTION_EXIST                          !> sch 28Jan2025. Logic variable for algal harvesting option initial input file.
+
   CHARACTER(2)  :: DYNPAD
   INTEGER       :: DYNPAD_SEG,DYNPAD_PIPE,DYNPIPELOG=9505
   
@@ -625,6 +632,7 @@ Module MAIN
   REAL,          ALLOCATABLE, DIMENSION(:)     :: CSUM,   CDSUM,  X1
   REAL,          ALLOCATABLE, DIMENSION(:)     :: RSOD,   RSOF,   DLTD,   DLTF,   DLTMAX
   REAL(R8),      ALLOCATABLE, DIMENSION(:)     :: QWDO
+  REAL(R8),      ALLOCATABLE, DIMENSION(:)     :: FHAO                    !>  sch 29Jan2025. Algal harvesting option variable.
   REAL(R8),      ALLOCATABLE, DIMENSION(:)     :: ICETHI, ALBEDO, HWI,    BETAI,  GAMMAI, ICEMIN, ICET2,  CBHE,   TSED
   REAL(R8),      ALLOCATABLE, DIMENSION(:)     :: FI,     SEDCI,  FSOD,   FSED,   AX,     RANLW,    T2I,    ELBOT,  DXI
   REAL(R8),      ALLOCATABLE, DIMENSION(:)     :: SEDCI1,SEDCI2,fsedc1,fsedc2 ! cb 6/7/17, Amaila
@@ -669,6 +677,7 @@ Module MAIN
   INTEGER,       ALLOCATABLE, DIMENSION(:)     :: NPOINT, NL,     KTQIN,  KBQIN, ilayer    ! SW 1/23/06
   INTEGER,       ALLOCATABLE, DIMENSION(:)     :: ITR,    KTTR,   KBTR,   JBTR
   INTEGER,       ALLOCATABLE, DIMENSION(:)     :: IWD,    KWD,    JBWD
+  INTEGER,       ALLOCATABLE, DIMENSION(:)     :: IHA,    JBHA,   HAIC    !>  sch 29Jan2025. Algal harvesting option and associated variables related grid location (JBHA) and interpolation option (HAIC). 
   INTEGER,       ALLOCATABLE, DIMENSION(:)     :: IWDO,   ITSR, JBTSR
   INTEGER,       ALLOCATABLE, DIMENSION(:)     :: ILAT,   JBDAM,  JSS
   INTEGER,       ALLOCATABLE, DIMENSION(:)     :: ICPL,   NACATD                                     
@@ -710,7 +719,7 @@ Module MAIN
   CHARACTER(8),  ALLOCATABLE, DIMENSION(:)     :: SLTRC,  SLHTC,  FRICC
   CHARACTER(8),  ALLOCATABLE, DIMENSION(:)     :: QINIC,  TRIC,   DTRIC,  WDIC,   HDIC,   METIC   !, KFNAME2
   CHARACTER(14),  ALLOCATABLE, DIMENSION(:)    :: KFNAME2
-  CHARACTER(14), ALLOCATABLE, DIMENSION(:)     :: C2CH,   CDCH,   EPCH,   macch, KFCH, APCH, ANCH, ALCH, ENCH, ELCH, EDCH  
+  CHARACTER(14), ALLOCATABLE, DIMENSION(:)     :: C2CH,   CDCH,   EPCH,   macch, KFCH, APCH, ANCH, ALCH, ENCH, ELCH  ! SW 10/20/15
   CHARACTER(45), ALLOCATABLE, DIMENSION(:)     :: KFNAME
   CHARACTER(72), ALLOCATABLE, DIMENSION(:)     :: SNPFN,  PRFFN,  VPLFN,  CPLFN,  SPRFN,  FLXFN,  FLXFN2, BTHFN,  VPRFN,  LPRFN, SPRVFN, ATMDEPFN   ! SW 9/28/2018
   CHARACTER(8),  ALLOCATABLE, DIMENSION(:,:)   :: SINKC,  SINKCT
@@ -895,13 +904,3 @@ Module Selective1TDGtarget
   REAL,    ALLOCATABLE, DIMENSION(:)           :: SPMINFRAC, PHMAXFLOW
   CHARACTER(8)                                 :: tsyearly, tsdynsel,dyupdate
 End Module Selective1TDGtarget
-    
-Module AlgaeReduceGasTransfer    
-LOGICAL :: REDUCE_GAS_TRANSFER
-REAL :: KHS_ALG
-CHARACTER(2) :: ICHAR2
-INTEGER :: ALGRED=24456,IOUTFREQ,IMM
-INTEGER, ALLOCATABLE, DIMENSION(:) :: I_ALG
-
-End Module AlgaeReduceGasTransfer
-    
