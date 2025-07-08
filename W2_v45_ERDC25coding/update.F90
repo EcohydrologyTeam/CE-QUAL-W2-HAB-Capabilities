@@ -90,12 +90,7 @@ USE GLOBAL;     USE NAMESC; USE GEOMC;  USE LOGICC; USE PREC;  USE SURFHE;  USE 
                 CSSB(K,I,CN(JC)) = 0.0D0
                 C1S(K,I,CN(JC))  = C1(K,I,CN(JC))
                 C2(K,I,CN(JC))   = DMAX1(C1(K,I,CN(JC)),0.0D0)
- 
-                DO J=1,NAL                                               !> sch 25Jan2025. Low DO - high mortality option. Loop through the algal state variables.
-                  IF(ALG(K,I,J)<ALG_MIN) ALG(K,I,J) = ALG_MIN            !> sch 25Jan2025. Low DO - high mortality option. Ensure a nominal standing crop of algae (ALG_MIN) is maintained.
-                END DO                                                   !> sch 25Jan2025. Low DO - high mortality option. End loop through the algal state variables.
-				
-             END DO
+              END DO
             END DO
           END DO
         END DO

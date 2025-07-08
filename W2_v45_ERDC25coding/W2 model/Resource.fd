@@ -1,8 +1,7 @@
 !
-! C:\Users\shinz\OneDrive - LimnoTech\Documents\PROJECTS\FEDERAL\2ERDC25
-! \W2_v4.5_2ERDC25-code_022825-PSU-base\W2 model\Resource.fd generated f
-! rom C:\Users\shinz\OneDrive - LimnoTech\Documents\PROJECTS\FEDERAL\2ER
-! DC25\W2_v4.5_2ERDC25-code_022825-PSU-base\W2 model\Resource.h
+! C:\Scott\research\corps of engineers\tomcole\w2code\Version 4.5\v4.5\W
+! 2 model\Resource.fd generated from C:\Scott\research\corps of engineer
+! s\tomcole\w2code\Version 4.5\v4.5\W2 model\Resource.h
 !
       integer, parameter :: dew_point_temperature = 1018
       integer, parameter :: low = 1043
