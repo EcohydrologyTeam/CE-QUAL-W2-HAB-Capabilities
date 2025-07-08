@@ -2,7 +2,7 @@
 INTEGER FUNCTION CE_QUAL_W2 (DLG)
 
 ! IVF/CVF specific code
-  USE DFLOGM; USE MSCLIB; USE DFWIN, RENAMED => DLT;
+  USE IFLOGM; USE MSCLIB; USE DFWIN, RENAMED => DLT;   ! USE DFLOGM
 
  !DEC$ATTRIBUTES STDCALL   :: ce_qual_w2
  !DEC$ATTRIBUTES REFERENCE :: Dlg
@@ -406,7 +406,7 @@ CALL INIT
     If(IncludeFFTLayer)Call CEMAFFTLayerCode
     !If(CEMARelatedCode .and. IncludeCEMASedDiagenesis)Call CEMASedimentDiagenesis  
     JDAY_INIT=JDAY   ! SW 10/16/2022 For Sed Diag model time step 
- 
+    
 !***********************************************************************************************************************************
 !**                                                   Task 2: Calculations                                                        **
 !***********************************************************************************************************************************
@@ -1007,10 +1007,16 @@ CALL HYDROINOUT
         DO I=IU+1,ID
           BTA(I) = V(I)-A(I)/BTA(I-1)*C(I-1)
           GMA(I) = D(I)-A(I)/BTA(I-1)*GMA(I-1)
-        END DO
+        END DO      
         Z(ID) = GMA(ID)/BTA(ID)
+          !if(z(id) /= z(id))then       ! Check for NAN
+          !    write(7678,'(a,f12.3,i5,e13.4,e13.4,e13.4,e13.4,2e13.4)')'Z(id)=NAN',jday,id,gma(id),c(id),bta(id),sz(id),f(id),f(id-1)
+          !endif
         DO I=ID-1,IU,-1
           Z(I) = (GMA(I)-C(I)*Z(I+1))/BTA(I)
+          !if(z(i) /= z(i))then    ! Check for NAN
+          !    write(7678,'(a,f12.3,i5,e13.4,e13.4,e13.4,e13.4,e13.4)')'Z(i)=NAN',jday,i,z(i+1),gma(i),c(i),bta(i),sz(i)
+          !endif
         END DO
 
 !****** Boundary water surface elevations
@@ -1491,11 +1497,6 @@ CALL HYDROINOUT
       KTI       = SKTI
       BKT       = SBKT
       QSS       = 0.0
-      !SP CEMA
-      !if(sediment_diagenesis)then
-      !  If(CEMARelatedCode .and. IncludeBedConsolidation)TSS       = 0.0  ! SW 7/27/2017
-      !end if
-      !End SP CEMA
       SB        = 0.0
       DLTS      = DLT
 
@@ -1510,7 +1511,7 @@ CALL HYDROINOUT
 
 
       CURMAX    = DLTMAXX/DLTFF
-      IF (PIPES) THEN
+      IF (PIPES) THEN         
         YS   = YSS
         VS   = VSS
         VST  = VSTS
@@ -1518,32 +1519,6 @@ CALL HYDROINOUT
         DTP  = DTPS
         QOLD = QOLDS
       END IF
-
-!********** Macrophytes
-      !DO JW=1,NWB
-      !  DO M=1,NMC
-      !    IF (MACROPHYTE_CALC(JW,M)) THEN
-      !      KT = KTWB(JW)
-      !        DO JB=BS(JW),BE(JW)
-      !          DO I=CUS(JB),DS(JB)
-      !            DO K=KT,KB(I)
-      !              MAC(K,I,M)=SMAC(K,I,M)
-      !              IF(KTICOL(I))THEN
-      !                JT=KTI(I)
-      !              ELSE
-      !                JT=KTI(I)+1
-      !              END IF
-      !              JE=KB(I)
-      !              DO J=JT,JE
-      !                MACRC(J,K,I,M)=SMACRC(J,K,I,M)
-      !                MACRM(J,K,I,M)=SMACRM(J,K,I,M)
-      !              END DO
-      !            END DO
-      !          END DO
-      !       END DO
-      !    END IF
-      !  END DO
-      !END DO
 
       GO TO 210
     END IF

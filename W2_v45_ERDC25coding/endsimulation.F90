@@ -5,7 +5,7 @@ USE GLOBAL;     USE NAMESC; USE GEOMC;  USE LOGICC; USE PREC;  USE SURFHE;  USE 
   USE STRUCTURES; USE TRANS;  USE TVDC;   USE SELWC;  USE GDAYC; USE SCREENC; USE TDGAS;   USE RSTART
   USE MACROPHYTEC; USE POROSITYC; USE ZOOPLANKTONC; USE INITIALVELOCITY; USE BIOENERGETICS; USE TRIDIAG_V
   USE modSYSTDG, ONLY: DEALLOCATE_SYSTDG       ;USE ENVIRPMOD               !  systdg
-  use CEMAVars;Use CEMASedimentDiagenesis ; USE MetFileRegion
+  use CEMAVars;Use CEMASedimentDiagenesis ; USE MetFileRegion; USE AlgaeReduceGasTransfer
   IMPLICIT NONE
   EXTERNAL RESTART_OUTPUT
   INTEGER IFILE 
@@ -202,18 +202,19 @@ USE GLOBAL;     USE NAMESC; USE GEOMC;  USE LOGICC; USE PREC;  USE SURFHE;  USE 
       END DO  
     END IF  
   
- 
-  
-  !OPEN(W2ERR,FILE='W2Errordump.opt',status='unknown')
-  !WRITE(w2err,*)'JDAY',jday,'SZ',sz,'Z',z,'H2KT',h2(kt,1:imx),'H1KT',h1(kt,1:imx),'BHR1',bhr1(kt,1:imx),'BHR2',bhr2(kt,1:imx),'WSE',elws,'Q',q,'QC',qc,'QERR',qerr,'T1',t1(kt,1:imx),'T2',t2(kt,1:imx),'SUKT',su(kt,1:imx),&
-  !                        'UKT',u(kt,1:imx),'QIN',qin,'QTR',qtr,'QWD',qwd
 IF (ERROR_OPEN) THEN                                           ! modified to be more organized and comma-delimited  !SR 12/26/2019
     OPEN (W2ERR,FILE='W2Errordump.csv',status='unknown')         ! changed to csv                                     !SR 12/26/2019
     WRITE (W2ERR,*) 'JDAY = ', JDAY                                                                                   !SR 12/26/2019
-    WRITE (W2ERR,'(A,1000(",",F0.6))') 'QIN:', (QIN(J),J=1,NBR)                                                       !SR 12/26/2019
+    WRITE (W2ERR,'(A,1000(",",F0.6))') 'QIN(JB):', (QIN(J),J=1,NBR)                                                       !SR 12/26/2019
     WRITE (W2ERR,'(A,1000(",",F0.6))') 'QTR:', (QTR(J),J=1,NTRT)                                                      !SR 12/26/2019
-    WRITE (W2ERR,'(A,1000(",",F0.6))') 'QDT:', (QDTR(J),J=1,NBR)                                                      !SR 12/26/2019
+    WRITE (W2ERR,'(A,1000(",",F0.6))') 'QDT(JB):', (QDTR(J),J=1,NBR)                                                      !SR 12/26/2019
     WRITE (W2ERR,'(A,1000(",",F0.6))') 'QWD:', (QWD(J),J=1,NWDT)                                                      !SR 12/26/2019
+    WRITE (W2ERR,'(A,1000(",",F0.6))') 'QSUM(JB):', (QSUM(J),J=1,NBR)
+    WRITE (W2ERR,'(A,1000(",",F0.6))') 'QGT:', (QGT(J),J=1,NGT)
+    WRITE (W2ERR,'(A,1000(",",F0.6))') 'QPI:', (QPI(J),J=1,NPI)
+    WRITE (W2ERR,'(A,1000(",",F0.6))') 'QPU:', (QPU(J),J=1,NPU)
+    WRITE (W2ERR,'(A,1000(",",F0.6))') 'QSP:', (QSP(J),J=1,NSP)
+
     WRITE (W2ERR,'(/A)') 'SEG,BRANCH,ACTIVE,KT,WSE,SZ,Z,Q,QC,QERR,H2KT,H1KT,BHR1,BHR2,T1,T2,SUKT,UKT,AVHR,SELWS'                 !SR 11/30/2021
     DO JW=1,NWB                                                                                                       !SR 12/26/2019
       KT = KTWB(JW)                                                                                                   !SR 12/26/2019
@@ -270,14 +271,13 @@ IF (ERROR_OPEN) THEN                                           ! modified to be 
   DEALLOCATE (LDOMND,  LRDOMND, RDOMND,  LPOMND,  LRPOMND, RPOMND,  LPOMNHD, RPOMNHD) 
   DEALLOCATE (LDOMCD,  LRDOMCD, RDOMCD,  LPOMCD,  LRPOMCD, RPOMCD,  LPOMCHD, RPOMCHD)
   DEALLOCATE (QSTRSAV, QWDSAV)                                                                                        !SR 06/29/2021
-  DEALLOCATE (FHASAV)                                  !> sch 29Jan2025. Algal harvesting option.
-  DEALLOCATE (CO2R,   SROC,   O2ER,   O2EG,   CAQ10,  CADK,   CAS,    BODP,   BODN,   BODC,   KBOD,   TBOD,   RBOD,   DTRC)
+
+  DEALLOCATE (CO2R,   SROC,   O2ER,   O2EG,   CAQ10,  CADK,   CAS,    DTRC)    ! !BODP,   BODN,   BODC,   KBOD,   TBOD,   RBOD,  sw 8/2024
   DEALLOCATE (LDOMDK, RDOMDK, LRDDK,  OMT1,   OMT2,   OMK1,   OMK2,   LPOMDK, RPOMDK, LRPDK,  POMS,   ORGP,   ORGN,   ORGC)
   DEALLOCATE (RCOEF1, RCOEF2, RCOEF3, RCOEF4, ORGSI,  NH4T1,  NH4T2,  NH4K1,  NH4K2,  NO3T1,  NO3T2,  NO3K1,  NO3K2,  NSTR)
   DEALLOCATE (DSIR,   PSIS,   PSIDK,  PARTSI, SODT1,  SODT2,  SODK1,  SODK2,  O2NH4,  O2OM,   O2AR,   O2AG,   CG1DK,  CGS)
   DEALLOCATE (CGQ10,  CG0DK,  CGLDK, CGKLF,CGCS,CGR,CUNIT,  CUNIT1, CUNIT2, CUNIT3,CAC,    INCAC,  TRCAC,  DTCAC,  PRCAC,  CNAME,  CNAME1, CNAME2, CMULT) !LCJ 2/26/15
   DEALLOCATE (CN,     INCN,   DTCN,   PRCN,   CSUM,   DLTMAX, QWDO,   TWDO,   SSS,    SEDRC,  TAUCR,  XBR, FNO3SED, DYNSTRUC, CDNN)
-  DEALLOCATE (FHAO)                                    !> sch 29Jan2025. Algal harvesting option.
 !  DEALLOCATE (SSFLOC, FLOCEQN)                                                 
   !DEALLOCATE (SEDCC1,SEDCC2, ICEQSS,SDK1,sdk2,SEDCI1,SEDCI2,SEDPRC1,SEDPRC2,SEDVP1,SEDVP2,SED1,SED2) 
   !DEALLOCATE (SEDCC1,SEDCC2, ICEQSS,SDK1,sdk2,SEDCI1,SEDCI2,SEDPRC1,SEDPRC2,SEDVP1,SEDVP2,SED1,SED2,fsedc1,fsedc2,pbiom,nbiom,cbiom)   ! Amaila, cb 6/7/17
@@ -301,15 +301,15 @@ IF (ERROR_OPEN) THEN                                           ! modified to be 
   DEALLOCATE (ET1,    ET2,    ET3,    HNAME,  FMTH,    KFAC,  KFNAME, KFNAME2,KFCN,   C2I,    TRCN,   CDN,    CDNAME, CDNAME1, CDNAME2,CDMULT)
   DEALLOCATE (CMBRS,  CMBRT,  FETCHU, FETCHD, IPRF,   ISNP,   ISPR,   BL,     LFPR,   DO3,    SED,    TKE,    PALT)
   DEALLOCATE (ADX,    DO1,    DO2,    B,      CONV,   CONV1,  EL,     DZ,     DZQ,    DX,     SAZ,    T1,TSS,QSS,BNEW, ILAYER, SELWS)   ! SW 1/23/06
-  DEALLOCATE (DO4,    DELT_LOW_DO,    CRIT_T, AM_LOW_DO)      !> sch 29Jan2025. Low DO - high mortality option variable(s).
-  DEALLOCATE (CRIT_TIN)                                       !> sch 29Jan2025. Alternative N-fixation option variable(s). *** !, CRIT_NFIX_ALG)  ** minimum crop is sort of duplicative, not needed here. Discuss later. sh
   DEALLOCATE (P,      SU,     SW,     BB,     BR,     BH,     BHR,    VOL,    HSEG,   DECAY,  FPFE,   FRICBR, UXBR,   UYBR)
   DEALLOCATE (DEPTHB, DEPTHM, FPSS,   TUH,    TDH,    TSSUH1, TSSUH2, TSSDH1, TSSDH2, SEDVP,  H,      EPC)
   DEALLOCATE (TVP,    QINF,   QOUT,   KOUT,   VOLUH2, VOLDH2, CWDO,   CDWDO,  CWDOC,  CDWDOC, CDTOT,  CPR,    CPB,    COUT)
   DEALLOCATE (CIN,    CDTR,   RSOD,   RSOF,   DLTD,   DLTF,   TSRD,   TSRF,   WDOD,   WDOF,   SNPD,   SNPF,   SPRD,   SPRF)
   DEALLOCATE (SCRD,   SCRF,   PRFD,   PRFF,   CPLD,   CPLF,   VPLD,   VPLF,   FLXD,   FLXF,   EPIC,   EPICI,  EPIPRC, EPIVP)
-  DEALLOCATE (CUH,    CDH,    EPM,    EPD,    C1S,    CSSB,   CVP,    CSSUH1, CSSUH2, CSSDH2, CSSDH1, LNAME,  IWR,    KTWR, EKTWR, EKBWR)
-  DEALLOCATE (JWUSP,  JWDSP,  QSP,    KBWR,   KTWD,   KBWD,   JBWD,   GTA1,   GTB1,   GTA2,   GTB2,   BGT,    IUGT,   IDGT)
+  DEALLOCATE (CUH,    CDH,    EPM,    EPD,    C1S,    CSSB,   CVP,    CSSUH1, CSSUH2, CSSDH2, CSSDH1, LNAME)
+  !IF(NIW>0)DEALLOCATE ( IWR,    KTWR, EKTWR, EKBWR, KBWR)
+  DEALLOCATE ( IWR,    KTWR, EKTWR, EKBWR, KBWR)
+  DEALLOCATE (JWUSP,  JWDSP,  QSP,    KTWD,   KBWD,   JBWD,   GTA1,   GTB1,   GTA2,   GTB2,   BGT,    IUGT,   IDGT)
   DEALLOCATE (QTR,    TTR,    KTTR,   KBTR,   EGT,    EGT2,   AGASGT, BGASGT, CGASGT, GASGTC, PUGTC,  ETUGT,  EBUGT,  KTUGT,  KBUGT)
   DEALLOCATE (PDGTC,  ETDGT,  EBDGT,  KTDGT,  KBDGT,  A1GT,   B1GT,   G1GT,   A2GT,   B2GT,   G2GT,   JWUGT,  JWDGT,  QGT)
   DEALLOCATE (EQGT,   JBUGT,  JBDGT,  JBUPI,  JBDPI,  JWUPI,  JWDPI,  QPI,    IUPI,   IDPI,   EUPI,   EDPI,   WPI,    DLXPI, BP)   ! SW 5/5/10
@@ -318,7 +318,6 @@ IF (ERROR_OPEN) THEN                                           ! modified to be 
   DEALLOCATE (B2SP,   AGASSP, BGASSP, CGASSP, EQSP,   GASSPC, JBUSP,  JBDSP,  STRTPU, ENDPU,  EONPU,  EOFFPU, QPU,    PPUC)
   DEALLOCATE (IUPU,   IDPU,   EPU,    ETPU,   EBPU,   KTPU,   KBPU,   JWUPU,  JWDPU,  JBUPU,  JBDPU,  PUMPON, KTW,    KBW, PUMP_DOWNSTREAM)
   DEALLOCATE (IWD,    KWD,    QWD,    EWD,    ITR,    QTRFN,  TTRFN,  CTRFN,  ELTRT,  ELTRB,  TRC,    JBTR,   QTRF,   CLRB)
-  DEALLOCATE (JBHA,   IHA,    FHA)                            !> sch 29Jan2025. Algal harvesting option variables.
   DEALLOCATE (TTLB,   TTRB,   CLLB,   SRLB1,  SRRB1,  SRLB2,  SRRB2,  SRFJD1, SHADEI, SRFJD2, TOPO,   QSW,    CTR)    ! SW 10/17/05
   DEALLOCATE (H1,     H2,     BH1,    BH2,    BHR1,   BHR2,   AVH1,   AVH2,   SAVH2,  AVHR,   SAVHR,  CBODD, BHRATIO)
   DEALLOCATE (POINT_SINK,         HPRWBC,   READ_EXTINCTION, READ_RADIATION)
@@ -337,10 +336,19 @@ IF (ERROR_OPEN) THEN                                           ! modified to be 
   DEALLOCATE (SNAPSHOT,       PROFILE,              VECTOR,             CONTOUR,          SPREADSHEET,     INTERNAL_WEIR)
   DEALLOCATE (SCREEN_OUTPUT,  FLUX,                 DYNAMIC_SHADE,      TRAPEZOIDAL, BOD_CALC, ALG_CALC)
   DEALLOCATE (SEDIMENT_CALC,  EPIPHYTON_CALC,       PRINT_DERIVED,      PRINT_EPIPHYTON,  TDG_SPILLWAY,    TDG_GATE, DYNSEDK)
-  DEALLOCATE (ISO_EPIPHYTON,  VERT_EPIPHYTON,       LONG_EPIPHYTON,     LATERAL_SPILLWAY, LATERAL_GATE,    LATERAL_PUMP)
+  !IF(NSP>0)DEALLOCATE (LATERAL_SPILLWAY)
+  !IF(NGT>0)DEALLOCATE (LATERAL_GATE)
+  !IF(NPU>0)DEALLOCATE (LATERAL_PUMP)
+  !IF(NPI>0)DEALLOCATE (LATERAL_PIPE)
+DEALLOCATE (LATERAL_SPILLWAY)
+DEALLOCATE (LATERAL_GATE)
+DEALLOCATE (LATERAL_PUMP)
+DEALLOCATE (LATERAL_PIPE)
+
+  IF(REDUCE_GAS_TRANSFER)DEALLOCATE(I_ALG)
+  DEALLOCATE (ISO_EPIPHYTON,  VERT_EPIPHYTON,       LONG_EPIPHYTON)          !,     LATERAL_SPILLWAY, LATERAL_GATE,    LATERAL_PUMP
   DEALLOCATE (iso_macrophyte,  vert_macrophyte,       long_macrophyte, macrcvp,   macrclp)  ! cb 8/21/15
-  DEALLOCATE (INTERP_HEAD,    INTERP_WITHDRAWAL,    INTERP_EXTINCTION,  INTERP_DTRIBS,    LATERAL_PIPE,    INTERP_TRIBS)
-  DEALLOCATE (INTERP_HARVESTING)                    !> sch 29Jan2025. Algal harvesting option variable.
+  DEALLOCATE (INTERP_HEAD,    INTERP_WITHDRAWAL,    INTERP_EXTINCTION,  INTERP_DTRIBS,    INTERP_TRIBS)   !LATERAL_PIPE,    
   DEALLOCATE (INTERP_OUTFLOW, INTERP_INFLOW,        INTERP_METEOROLOGY, ZERO_SLOPE)
   DEALLOCATE (SEDIMENT_RESUSPENSION, ACTIVE_RULE_W2SELECTIVE)   !HYDRO_PLOT, CONSTITUENT_PLOT, DERIVED_PLOT,        
   DEALLOCATE (ORGPLD, ORGPRD, ORGPLP, ORGPRP, ORGNLD, ORGNRD, ORGNLP)
@@ -383,7 +391,7 @@ IF (ERROR_OPEN) THEN                                           ! modified to be 
   DEALLOCATE(BSAVE, GMA1,BTA1,ATMDEP_P,ATMDEP_N)
   DEALLOCATE(C_ATM_DEPOSITION, ATM_DEPOSITION,ATM_DEPOSITIONC,ATM_DEP_LOADING,ATM_DEPOSITION_INTERPOLATION,ATMDEPFN,ATMDCN,NACATD)
   DEALLOCATE(TN_SEDSOD_NH4,TP_SEDSOD_PO4,TPOUT,TPTRIB,TPDTRIB,TPWD,TPPR,TPIN,TNOUT,TNTRIB,TNDTRIB,TNWD,TNPR,TNIN,NH3GASLOSS)   ! TP_SEDBURIAL,TN_SEDBURIAL,
-  IF(NBOD > 0)DEALLOCATE(NBODC,NBODN,NBODP)
+  IF(NBOD > 0)DEALLOCATE(NBODC,NBODN,NBODP,KBOD,TBOD,RBOD,BODP,BODC,BODN)
   !IF(MWB_EXIST)THEN
   DEALLOCATE (WAIT_FOR_TRIB_INPUT,  WAIT_FOR_BRANCH_INPUT, TR_FILEDIR, BR_FILEDIR)                                      !SR 11/26/19
   !ENDIF
