@@ -195,6 +195,7 @@ END IF
   ALLOCATE (VBC(NWB),    EBC(NWB),    MBC(NWB),    PQC(NWB),    EVC(NWB),    PRC(NWB))
   ALLOCATE (WINDC(NWB),  QINC(NWB),   QOUTC(NWB),  HEATC(NWB),  SLHTC(NWB))
   ALLOCATE (QINIC(NBR),  DTRIC(NBR),  TRIC(NTR),   WDIC(NWD),   HDIC(NBR),   METIC(NWB))
+  ALLOCATE (IHA(IMX),    HAIC(IMX))                  !> sch 23May2025. Algal harvesting interpolation switch ... read these in the "harvest_option_input.csv" input file (if it exists).
   ALLOCATE (EXC(NWB),    EXIC(NWB))
   ALLOCATE (SLTRC(NWB),  THETA(NWB),  FRICC(NWB),  NAF(NWB),    ELTMF(NWB), Z0(NWB))
   ALLOCATE (ZMIN(NWB),   IZMIN(NWB))
@@ -311,6 +312,7 @@ END IF
   ALLOCATE (TSSEV(NBR),  TSSPR(NBR),  TSSTR(NBR),  TSSDT(NBR),  TSSWD(NBR),  TSSUH(NBR),  TSSDH(NBR),  TSSIN(NBR),  TSSOUT(NBR))
   ALLOCATE (ET(IMX),     RS(IMX),     RN(IMX),     RB(IMX),     RC(IMX),     RE(IMX),     SHADE(IMX))
   ALLOCATE (DLTMAX(NOD), QWDO(IMX),   TWDO(IMX))                                                                        ! SW 1/24/05
+  ALLOCATE (FHAO(IMX))                                       !> sch 29Jan2025. Algal harvesting variable.
   ALLOCATE (SOD(IMX),    ELWS(IMX),   BKT(IMX),    REAER(IMX), SELWS(IMX))
   ALLOCATE (ICETH(IMX),  ICE(IMX),    ICESW(IMX))
   ALLOCATE (Q(IMX),      QC(IMX),     QERR(IMX),   QSSUM(IMX))
@@ -325,6 +327,8 @@ END IF
   ALLOCATE (AC(NAL),     ASI(NAL),    ACHLA(NAL),  AHSP(NAL),   AHSN(NAL),   AHSSI(NAL))
   ALLOCATE (AT1(NAL),    AT2(NAL),    AT3(NAL),    AT4(NAL),    AK1(NAL),    AK2(NAL),    AK3(NAL),    AK4(NAL), AVERTM(NAL))
   ALLOCATE (AG(NAL),     AR(NAL),     AE(NAL),     AM(NAL),     AS(NAL),     EXA(NAL),    ASAT(NAL),   AP(NAL),   AN(NAL))
+  ALLOCATE (CRIT_T(NAL), AM_LOW_DO(NAL))                      !> sch 25Jan2025. Low DO - high mortality option variables.
+  ALLOCATE (CRIT_TIN(NAL))                                    !> sch 01Feb2025. Alternative N-fixation option variable(s).
   ALLOCATE (ENPR(NEPT),  ENEQN(NEPT))
   ALLOCATE (EG(NEPT),    ER(NEPT),    EE(NEPT),    EM(NEPT),    EB(NEPT),    ESAT(NEPT),  EP(NEPT),    EN(NEPT))
   ALLOCATE (EC(NEPT),    ESI(NEPT),   ECHLA(NEPT), EHSP(NEPT),  EHSN(NEPT),  EHSSI(NEPT), EPOM(NEPT),  EHS(NEPT))
@@ -341,6 +345,7 @@ END IF
   ALLOCATE (SAVH2(KMX,IMX),  AVH1(KMX,IMX),   AVH2(KMX,IMX),   AVHR(KMX,IMX),   SAVHR(KMX,IMX))
   ALLOCATE (LFPR(KMX,IMX),   BI(KMX,IMX), BNEW(KMX,IMX))        ! SW 1/23/06
   ALLOCATE (ADX(KMX,IMX),    ADZ(KMX,IMX),    DO1(KMX,IMX),    DO2(KMX,IMX),    DO3(KMX,IMX),    SED(KMX,IMX))
+  ALLOCATE (DO4(KMX,IMX),    DELT_LOW_DO(KMX,IMX))          !> sch 25Jan2025. Low DO - high mortality option variables.
   ALLOCATE (B(KMX,IMX),      CONV(KMX,IMX),   CONV1(KMX,IMX),  EL(KMX,IMX),     DZ(KMX,IMX),     DZQ(KMX,IMX),    DX(KMX,IMX))
   ALLOCATE (P(KMX,IMX),      SU(KMX,IMX),     SW(KMX,IMX),     SAZ(KMX,IMX),    T1(KMX,IMX),     TSS(KMX,IMX),    QSS(KMX,IMX))
   ALLOCATE (BB(KMX,IMX),     BR(KMX,IMX),     BH(KMX,IMX),     BHR(KMX,IMX),    VOL(KMX,IMX),    HSEG(KMX,IMX),   DECAY(KMX,IMX), CONSTRICTION(KMX,IMX), BCONSTRICTION(IMX))    ! SW 6/26/2018
@@ -421,6 +426,7 @@ END IF
   ALLOCATE (IUPU(NPU),   IDPU(NPU),   EPU(NPU),    STRTPU(NPU), ENDPU(NPU),  EONPU(NPU),  EOFFPU(NPU), QPU(NPU),   PPUC(NPU))
   ALLOCATE (ETPU(NPU),   EBPU(NPU),   KTPU(NPU),   KBPU(NPU),   JWUPU(NPU),  JWDPU(NPU),  JBUPU(NPU),  JBDPU(NPU), PUMPON(NPU),PUMP_DOWNSTREAM(NPU))
   ALLOCATE (IWD(NWDT),   KWD(NWDT),   QWD(NWDT),   EWD(NWDT),   KTW(NWDT),   KBW(NWDT), QWDSAV(NWDT))
+  ALLOCATE (JBHA(IMX),   FHA(IMX),    FHASAV(IMX), INTERP_HARVESTING(IMX))  !> sch 29Jan2025. Algal harvesting option. Use IMX, since neeed to allocate before the segment count for harvesting is read.
   ALLOCATE (ITR(NTRT),   QTRFN(NTR),  TTRFN(NTR),  CTRFN(NTR),  ELTRT(NTRT), ELTRB(NTRT), TRC(NTRT),   JBTR(NTRT), QTRF(KMX,NTRT))
   ALLOCATE (TTLB(IMX),   TTRB(IMX),   CLLB(IMX),   CLRB(IMX))
   ALLOCATE (SRLB1(IMX),  SRRB1(IMX),  SRLB2(IMX),  SRRB2(IMX),  SRFJD1(IMX), SHADEI(IMX), SRFJD2(IMX))
@@ -2294,6 +2300,59 @@ ENDIF
   ALLOCATE(BSAVE(KMX,IMX))
   BSAVE=0.0
   BSAVE = B
+  
+!> sch 26JUN2025. Start Low DO - high mortality option input reading.
+  LOW_DO_MORTALITY_EXIST = .FALSE.                                   !> If low DO mortality input file exist, then read and initialize inputs.
+  DELT_LOW_DO = 0.0                                                  !> Initialize time tracking of low DO periods
+  ALG_O2LIM = 0.0                                                    !> Initialize low DO trigger to zero
+  ALG_MIN = 0.0                                                      !> Initialize minimum algae to zero
+  INQUIRE(FILE='low_do_mort_input.csv',EXIST=LOW_DO_MORTALITY_EXIST) !> Assume input file is .csv type (add .npt option later if needed). 
+  IF(LOW_DO_MORTALITY_EXIST) THEN
+    OPEN(NUNIT,file='low_do_mort_input.csv',status='old')
+    READ (NUNIT, *)                                                  !> Skip header line
+    READ (NUNIT, *)                                                  !> Skip descriptive line
+    READ (NUNIT, *) ALG_O2LIM, ALG_MIN                               !> Read DO concentration trigger and minimum algal standing crop.
+    READ (NUNIT, *)                                                  !> Skip descriptive line
+    READ (NUNIT, *) (CRIT_T(JA), JA=1,NAL)                           !> Read algal group-specific low DO duration triggers.
+    READ (NUNIT, *)                                                  !> Skip descriptive line
+    READ (NUNIT, *) (AM_LOW_DO(JA), JA=1,NAL)                        !> Read algal group-specific high mortality rates.
+    CLOSE(NUNIT)
+    AM_LOW_DO = AM_LOW_DO / DAY                                      !> Convert to model time units. DAY=86400.0 (global parameter)
+    CRIT_T = CRIT_T * DAY                                            !> Convert to model time units. DAY=86400.0 (global parameter)
+  ENDIF
+!> sch 25Jan2025. End Low DO - high mortality option input reading.
+
+!> sch 25Jan2025. Start reading N-fixation option inputs.
+  NFIX_OPTION_EXIST = .FALSE.                                        !> If N-fix option input file exists, then read and initialize inputs.
+  CRIT_TIN = 0.0                                                     !> Set critical TIN conc array values to zero. Only non-zero values that are read in matter.
+  INQUIRE(FILE='nfix_option_input.csv',EXIST=NFIX_OPTION_EXIST)      !> Assume input file is .csv type (add .npt option later if needed).
+  IF(NFIX_OPTION_EXIST) THEN
+    OPEN(NUNIT,file='nfix_option_input.csv',status='old')
+    READ (NUNIT, *)                                                  !> Skip header line
+    READ (NUNIT, *)                                                  !> Skip descriptive line
+    READ (NUNIT, *) (CRIT_TIN(JA), JA=1,NAL)                         !> Read critcal low TIN conc to initiate optional N-fixation approach.
+    CLOSE(NUNIT)
+  ENDIF
+!> sch 25Jan2025. End reading N-fixation option inputs.
+  
+!> sch 28Jan2025. Start algal harvesting option input reading. A separate input file with the time-series inputs (fraction of algae harvested by JDAY for each harvested segment) is read in time-varying.f90
+  HARVEST_OPTION_EXIST = .FALSE.
+  NHF = 0                                                              !> Initialize NHF to make sure no impact if the input file doesn't exist.
+  INQUIRE(FILE='harvest_option_input.csv',EXIST=HARVEST_OPTION_EXIST)  !> Assume input file is .csv type (add .npt option later if needed).
+  IF(HARVEST_OPTION_EXIST) THEN
+    OPEN(NUNIT,file='harvest_option_input.csv',status='old')
+    READ (NUNIT, *)                                                    !> Skip header line
+    READ (NUNIT, *)                                                    !> Skip descriptive line
+	READ (NUNIT, *) HAFFN                                              !> Read the filename for the file containing the time-varying harvesting inputs.
+    READ (NUNIT, *)                                                    !> Skip descriptive line
+    READ (NUNIT, *) NHF                                                !> Read number of segments with time-varying harvesting inputs.
+    READ (NUNIT, *)                                                    !> Skip descriptive line
+    READ (NUNIT, *) (IHA(I), I=1,NHF)                                  !> Read list of segments with time-varying harvesting inputs.
+    READ (NUNIT, *)                                                    !> Skip descriptive line
+    READ (NUNIT, *) (HAIC(I), I=1,NHF)                                 !> Read interpolation option for each segment with time-varying harvesting inputs.
+    CLOSE(NUNIT)
+  ENDIF
+!> sch 28Jan2025. End algal harvesting option input reading.
   
 !  Amaila start - reading additional sediment compartments coefficients
   STANDING_BIOMASS_DECAY=.FALSE.
