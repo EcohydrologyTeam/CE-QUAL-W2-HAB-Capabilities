@@ -53,8 +53,8 @@ ENTRY DOWNSTREAM_WITHDRAWAL (JS)
   END IF
   IF (ESTR(JS,JB) > EL(KT,ID)-ELR) ELSTR = WSEL
   IF (KBSW(JS,JB) < KSTR) THEN
-    KSTR  = KTOP          ! KT
-    ELSTR = EL(KTOP,ID)   !WSEL
+    KSTR  = KT
+    ELSTR = WSEL
   END IF
 
 ! Boundary interference
@@ -152,14 +152,6 @@ ENTRY DOWNSTREAM_WITHDRAWAL (JS)
   TAVG(JS,JB)=0.0                                                    ! CB 5/12/10
   IF(CONSTITUENTS)CAVG(JS,JB,CN(1:NAC))=0.0
   IF(DERIVED_CALC)CDAVG(JS,JB,CDN(1:NACD(JW),JW))=0.0
-  IF(VSUM==0.0)THEN
-      WRITE(WRN,'(A,F12.3,A,I5,A,I5,A,I5,A,E12.4,A)')'DOWNSTREAM WITHDRAWAL: VSUM=0.0 on JDAY:',JDAY,' KTOP:',KTOP,' KBOT:',KBOT,' KSTR:',KSTR,' DLRHOMAX:',DLRHOMAX,' SET TO EQUAL WITHDRAWALS WITH DEPTH'
-      VSUM=1.0
-      DO K=KTOP,KBOT
-      VNORM(K)=1.0/(KTOP-KBOT+1)
-      ENDDO
-  ENDIF
-  
   DO K=KTOP,KBOT
     QNEW(K)    = (VNORM(K)/VSUM)*QSTR(JS,JB)
     QOUT(K,JB) =  QOUT(K,JB)+QNEW(K)
@@ -267,8 +259,8 @@ ENTRY DOWNSTREAM_WITHDRAWAL_ESTIMATE(JS,TEMPEST,ESTRTEST)
   END IF
   IF (ESTRTEST > EL(KT,ID)-ELR) ELSTR = WSEL
   IF (KBSW(JS,JB) < KSTR) THEN
-    KSTR  = KTOP         !KT
-    ELSTR = EL(KTOP,ID)  !WSEL                                                                                                       !SW 10/05/00
+    KSTR  = KT
+    ELSTR = WSEL                                                                                                       !SW 10/05/00
   END IF
 
 ! Boundary interference
@@ -361,14 +353,6 @@ ENTRY DOWNSTREAM_WITHDRAWAL_ESTIMATE(JS,TEMPEST,ESTRTEST)
   END DO
 
 ! Outflows
-    IF(VSUM==0.0)THEN
-      WRITE(WRN,'(A,F12.3,A,I5,A,I5,A,I5,A,E12.4,A)')'DOWNSTREAM WITHDRAWAL ESTIMATE: VSUM=0.0 on JDAY:',JDAY,' KTOP:',KTOP,' KBOT:',KBOT,' KSTR:',KSTR,' DLRHOMAX:',DLRHOMAX,' SET TO EQUAL WITHDRAWALS WITH DEPTH'
-      VSUM=1.0
-      DO K=KTOP,KBOT
-      VNORM(K)=1.0/(KTOP-KBOT+1)
-      ENDDO
-  ENDIF
-
 
   tempest=0.0
   DO K=KTOP,KBOT
@@ -411,8 +395,8 @@ ENTRY LATERAL_WITHDRAWAL
   END IF
   IF (EWD(JWD) > EL(KT,I)) ELWD = EL(KT,I)
   IF (KBWD(JWD) < KWD) THEN
-    KWD  = KTOP        ! KT  !SW 8/13/2024
-    ELWD = EL(KTOP,I)  ! EL(KT,I)
+    KWD  = KT
+    ELWD = EL(KT,I)
   END IF
 
 ! Boundary interference
@@ -483,7 +467,6 @@ ENTRY LATERAL_WITHDRAWAL
 
   VSUM     = 0.0
 !  DLRHOMAX = MAX(DLRHOT,DLRHOB,1.0E-10)                                                                             ! SW 1/24/05
-      
   DO K=KTOP,KBOT
 !    VNORM(K) = ABS(1.0-((RHO(K,I)-RHO(KWD,I))/DLRHOMAX)**2)*BHR2(K,I)
  	   IF(K.GT.KWD)THEN
@@ -497,20 +480,12 @@ ENTRY LATERAL_WITHDRAWAL
 	 VNORM(K)=VNORM(K)*BHR2(K,I)
      VSUM     = VSUM+VNORM(K)
   END DO
-  
+
 ! Outflows
   QSUMWD=0.0                                                  ! SW 7/30/09
   TAVGW(JWD)=0.0
   IF(CONSTITUENTS)CAVGW(JWD,CN(1:NAC))=0.0
   IF(DERIVED_CALC)CDAVGW(JWD,CDN(1:NACD(JW),JW))=0.0
-  
-    IF(VSUM==0.0)THEN
-      WRITE(WRN,'(A,F12.3,A,I5,A,I5,A,I5,A,E12.4,A)')'LATERAL WITHDRAWAL: VSUM=0.0 on JDAY:',JDAY,' KTOP:',KTOP,' KBOT:',KBOT,' KWD:',KWD,' DLRHOMAX:',DLRHOMAX,' SET TO EQUAL WITHDRAWALS WITH DEPTH'
-      VSUM=1.0
-      DO K=KTOP,KBOT
-      VNORM(K)=1.0/(KTOP-KBOT+1)
-      ENDDO
-  ENDIF
 
   DO K=KTOP,KBOT
     FRACV=(VNORM(K)/VSUM)
@@ -609,8 +584,8 @@ ENTRY LATERAL_WITHDRAWAL
   END IF
   IF (ESTRTEST > EL(KT,I)) ELWD = EL(KT,I)
   IF (KBWD(JJWD) < KWD) THEN
-    KWD  = KTOP        ! KT
-    ELWD = EL(KTOP,I)  ! EL(KT,I)
+    KWD  = KT
+    ELWD = EL(KT,I)
   END IF
 
 ! Boundary interference
@@ -696,15 +671,6 @@ ENTRY LATERAL_WITHDRAWAL
   END DO
 
 ! Outflows
-  
-    IF(VSUM==0.0)THEN
-      WRITE(WRN,'(A,F12.3,A,I5,A,I5,A,I5,A,E12.4,A)')'LATERAL WITHDRAWAL ESTIMATE: VSUM=0.0 on JDAY:',JDAY,' KTOP:',KTOP,' KBOT:',KBOT,' KWD:',KWD,' DLRHOMAX:',DLRHOMAX,' SET TO EQUAL WITHDRAWALS WITH DEPTH'
-      VSUM=1.0
-      DO K=KTOP,KBOT
-      VNORM(K)=1.0/(KTOP-KBOT+1)
-      ENDDO
-  ENDIF
-
 
   TEMPEST = 0.0                                                                                                       !SR 12/19/2022
   DO K=KTOP,KBOT

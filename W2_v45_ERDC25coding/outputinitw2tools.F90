@@ -201,11 +201,10 @@ SUBROUTINE OUTPUTINIT
         WRITE (SEGNUM,'(I0)') IWDO(JWD)  
         SEGNUM = ADJUSTL(SEGNUM)  
         L      = LEN_TRIM(SEGNUM)  
-                
         IF(L2==0)THEN
-        OPEN   (WDO(JWD,1),FILE='q_'//WDOFN(L2+1:L1-1)//'_'//SEGNUM(1:L)//WDOFN(L1:L1+4),POSITION='APPEND')  ! '.opt' SW 4/14/2017
+        OPEN   (WDO(JWD,1),FILE='qwo_'//SEGNUM(1:L)//WDOFN(L1:L1+4),POSITION='APPEND')  ! '.opt' SW 4/14/2017
         ELSE
-        OPEN   (WDO(JWD,1),FILE=WDOFN(1:L2)//'q_'//WDOFN(L2+1:L1-1)//'_'//SEGNUM(1:L)//WDOFN(L1:L1+4),POSITION='APPEND')  ! '.opt' SW 4/14/2017
+        OPEN   (WDO(JWD,1),FILE=WDOFN(1:L2)//'qwo_'//SEGNUM(1:L)//WDOFN(L1:L1+4),POSITION='APPEND')  ! '.opt' SW 4/14/2017
         ENDIF
         
         REWIND (WDO(JWD,1))  
@@ -216,9 +215,9 @@ SUBROUTINE OUTPUTINIT
         BACKSPACE (WDO(JWD,1))  
 106     JDAY1 = 0.0  
         IF(L2==0)THEN
-        OPEN   (WDO(JWD,2),FILE='t_'//WDOFN(L2+1:L1-1)//'_'//SEGNUM(1:L)//WDOFN(L1:L1+4),POSITION='APPEND')    ! '.opt' SW 4/14/2017 repeated for all .opt below for Downstream outflow
+        OPEN   (WDO(JWD,2),FILE='two_'//SEGNUM(1:L)//WDOFN(L1:L1+4),POSITION='APPEND')    ! '.opt' SW 4/14/2017 repeated for all .opt below for Downstream outflow
         ELSE
-        OPEN   (WDO(JWD,2),FILE=WDOFN(1:L2)//'t_'//WDOFN(L2+1:L1-1)//'_'//SEGNUM(1:L)//WDOFN(L1:L1+4),POSITION='APPEND')    !   
+        OPEN   (WDO(JWD,2),FILE=WDOFN(1:L2)//'two_'//SEGNUM(1:L)//WDOFN(L1:L1+4),POSITION='APPEND')    !   
         ENDIF
         
         REWIND (WDO(JWD,2))  
@@ -230,9 +229,9 @@ SUBROUTINE OUTPUTINIT
 107     JDAY1=0.0  
         IF (CONSTITUENTS) THEN  
           IF(L2==0)THEN
-          OPEN   (WDO(JWD,3),FILE='c_'//WDOFN(L2+1:L1-1)//'_'//SEGNUM(1:L)//WDOFN(L1:L1+4),POSITION='APPEND')
+          OPEN   (WDO(JWD,3),FILE='cwo_'//SEGNUM(1:L)//WDOFN(L1:L1+4),POSITION='APPEND')
           ELSE
-          OPEN   (WDO(JWD,3),FILE=WDOFN(1:L2)//'c_'//WDOFN(L2+1:L1-1)//'_'//SEGNUM(1:L)//WDOFN(L1:L1+4),POSITION='APPEND')              
+          OPEN   (WDO(JWD,3),FILE=WDOFN(1:L2)//'cwo_'//SEGNUM(1:L)//WDOFN(L1:L1+4),POSITION='APPEND')              
           ENDIF
           
           REWIND (WDO(JWD,3))  
@@ -246,9 +245,9 @@ SUBROUTINE OUTPUTINIT
         END IF  
         IF (DERIVED_CALC) THEN  
           IF(L2==0)THEN
-          OPEN   (WDO(JWD,4),FILE='d_'//WDOFN(L2+1:L1-1)//'_'//SEGNUM(1:L)//WDOFN(L1:L1+4),POSITION='APPEND')
+          OPEN   (WDO(JWD,4),FILE='dwo_'//SEGNUM(1:L)//WDOFN(L1:L1+4),POSITION='APPEND')
           ELSE
-          OPEN   (WDO(JWD,4),FILE=WDOFN(1:L2)//'d_'//WDOFN(L2+1:L1-1)//'_'//SEGNUM(1:L)//WDOFN(L1:L1+4),POSITION='APPEND')              
+          OPEN   (WDO(JWD,4),FILE=WDOFN(1:L2)//'dwo_'//SEGNUM(1:L)//WDOFN(L1:L1+4),POSITION='APPEND')              
           ENDIF
           
           REWIND (WDO(JWD,4))  
@@ -1004,7 +1003,7 @@ ENDIF
             'DEPTH(m)','WIDTH(m)','SHADE','ICETH(m)',                         &
             'Tvolavg(C)','NetRad(Wm-2)','SWSolar(Wm-2)','LWRad(Wm-2)','BackRad(Wm-2)','EvapF(Wm-2)','ConducF(Wm-2)','ReaerationCoeff(day-1)',   &
             (CNAME2(CN(JC)),JC=1,NAC),                                           &  
-            ('     EPI(g/m2)',JE=1,NEP),('     MAC',JM=1,NMC),'     SED(Organic matter in sediments g/m3)','    SEDP(OrgP in sediments gP/m3)','    SEDN(OrgN in sediments gN/m3)','    SEDC(OrgCSediments gC/m3)',   &  
+            ('     EPI',JE=1,NEP),('     MAC',JM=1,NMC),'     SED(Organic matter in sediments g/m3)','    SEDP(OrgP in sediments gP/m3)','    SEDN(OrgN in sediments gN/m3)','    SEDC(OrgCSediments gC/m3)',   &  
             (CDNAME2(CDN(JD,JW)),JD=1,NACD(JW)),(KFNAME2(KFCN(JF,JW)),JF=1,NAF(JW)),('PLIM_'//ADJUSTL(CNAME2(NAS+JA-1)),JA=1,NAL),('NLIM_'//ADJUSTL(CNAME2(NAS+JA-1)),JA=1,NAL),('LLIM_'//ADJUSTL(CNAME2(NAS+JA-1)),JA=1,NAL),  &
             ('EPLIM_'//CNUM(JE),JE=1,NEP),('ENLIM_'//CNUM(JE),JE=1,NEP),('ELLIM_'//CNUM(JE),JE=1,NEP)
               ELSE
@@ -1020,7 +1019,7 @@ ENDIF
                             IF(NEP>0 .AND. EPIPHYTON_CALC(JW,1))THEN
             WRITE (TSR(J),'(*(A,","))') 'JDAY','DLT(s)','ELWS(m)','T2(C)','U(ms-1)','Q(m3s-1)','SRON(Wm-2)','EXT(m-1)',   &  
             'DEPTH(m)','WIDTH(m)','SHADE','ICETH(m)','Tvolavg(C)','NetRad(Wm-2)','SWSolar(Wm-2)','LWRad(Wm-2)','BackRad(Wm-2)','EvapF(Wm-2)','ConducF(Wm-2)','ReaerationCoeff(day-1)',  (CNAME2(CN(JC)),JC=1,NAC),                     &  
-            ('     EPI(g/m2)',JE=1,NEP),('     MAC',JM=1,NMC),(CDNAME2(CDN(JD,JW)),JD=1,NACD(JW)),(KFNAME2(KFCN(JF,JW)),JF=1,NAF(JW)),('PLIM_'//ADJUSTL(CNAME2(NAS+JA-1)),JA=1,NAL),('NLIM_'//ADJUSTL(CNAME2(NAS+JA-1)),JA=1,NAL),('LLIM_'//ADJUSTL(CNAME2(NAS+JA-1)),JA=1,NAL),   &
+            ('     EPI',JE=1,NEP),('     MAC',JM=1,NMC),(CDNAME2(CDN(JD,JW)),JD=1,NACD(JW)),(KFNAME2(KFCN(JF,JW)),JF=1,NAF(JW)),('PLIM_'//ADJUSTL(CNAME2(NAS+JA-1)),JA=1,NAL),('NLIM_'//ADJUSTL(CNAME2(NAS+JA-1)),JA=1,NAL),('LLIM_'//ADJUSTL(CNAME2(NAS+JA-1)),JA=1,NAL),   &
               ('EPLIM_'//CNUM(JE),JE=1,NEP),('ENLIM_'//CNUM(JE),JE=1,NEP),('ELLIM_'//CNUM(JE),JE=1,NEP)    
                             ELSE
                         WRITE (TSR(J),'(*(A,","))') 'JDAY','DLT(s)','ELWS(m)','T2(C)','U(ms-1)','Q(m3s-1)','SRON(Wm-2)','EXT(m-1)',   &  
@@ -1035,7 +1034,7 @@ ENDIF
             WRITE (TSR(J),'(*(A,","))')'JDAY','DLT(s)','ELWS(m)','T2(C)','U(ms-1)','Q(m3s-1)','SRON(Wm-2)','EXT(m-1)',   &  
             'DEPTH(m)','WIDTH(m)','SHADE','Tvolavg(C)','NetRad(Wm-2)','SWSolar(Wm-2)','LWRad(Wm-2)','BackRad(Wm-2)','EvapF(Wm-2)','ConducF(Wm-2)','ReaerationCoeff(day-1)',   &
             (CNAME2(CN(JC)),JC=1,NAC),                     &  
-            ('     EPI(g/m2)',JE=1,NEP),('     MAC',JM=1,NMC),'     SED(Organic matter in sediments g/m3)','    SEDP(OrgP in sediments gP/m3)','    SEDN(OrgN in sediments gN/m3)','    SEDC(OrgCSediments gC/m3)',   &  
+            ('     EPI',JE=1,NEP),('     MAC',JM=1,NMC),'     SED(Organic matter in sediments g/m3)','    SEDP(OrgP in sediments gP/m3)','    SEDN(OrgN in sediments gN/m3)','    SEDC(OrgCSediments gC/m3)',   &  
             (CDNAME2(CDN(JD,JW)),JD=1,NACD(JW)),(KFNAME2(KFCN(JF,JW)),JF=1,NAF(JW)),('PLIM_'//ADJUSTL(CNAME2(NAS+JA-1)),JA=1,NAL),('NLIM_'//ADJUSTL(CNAME2(NAS+JA-1)),JA=1,NAL),('LLIM_'//ADJUSTL(CNAME2(NAS+JA-1)),JA=1,NAL),   &
               ('EPLIM_'//CNUM(JE),JE=1,NEP),('ENLIM_'//CNUM(JE),JE=1,NEP),('ELLIM_'//CNUM(JE),JE=1,NEP)                   
                ELSE
@@ -1051,7 +1050,7 @@ ENDIF
             WRITE (TSR(J),'(*(A,","))') 'JDAY','DLT(s)','ELWS(m)','T2(C)','U(ms-1)','Q(m3s-1)','SRON(Wm-2)','EXT(m-1)',   &  
              'DEPTH(m)','WIDTH(m)','SHADE','Tvolavg(C)','NetRad(Wm-2)','SWSolar(Wm-2)','LWRad(Wm-2)','BackRad(Wm-2)','EvapF(Wm-2)','ConducF(Wm-2)','ReaerationCoeff(day-1)',   &
             (CNAME2(CN(JC)),JC=1,NAC),                     &  
-            ('     EPI(g/m2)',JE=1,NEP),('     MAC',JM=1,NMC),(CDNAME2(CDN(JD,JW)),JD=1,NACD(JW)),(KFNAME2(KFCN(JF,JW)),JF=1,NAF(JW)),('PLIM_'//ADJUSTL(CNAME2(NAS+JA-1)),JA=1,NAL),('NLIM_'//ADJUSTL(CNAME2(NAS+JA-1)),JA=1,NAL),('LLIM_'//ADJUSTL(CNAME2(NAS+JA-1)),JA=1,NAL),   &
+            ('     EPI',JE=1,NEP),('     MAC',JM=1,NMC),(CDNAME2(CDN(JD,JW)),JD=1,NACD(JW)),(KFNAME2(KFCN(JF,JW)),JF=1,NAF(JW)),('PLIM_'//ADJUSTL(CNAME2(NAS+JA-1)),JA=1,NAL),('NLIM_'//ADJUSTL(CNAME2(NAS+JA-1)),JA=1,NAL),('LLIM_'//ADJUSTL(CNAME2(NAS+JA-1)),JA=1,NAL),   &
              ('EPLIM_'//CNUM(JE),JE=1,NEP),('ENLIM_'//CNUM(JE),JE=1,NEP),('ELLIM_'//CNUM(JE),JE=1,NEP)                   
             ELSE
             WRITE (TSR(J),'(*(A,","))') 'JDAY','DLT(s)','ELWS(m)','T2(C)','U(ms-1)','Q(m3s-1)','SRON(Wm-2)','EXT(m-1)',   &  
@@ -1100,10 +1099,8 @@ ENDIF
         WRITE (SEGNUM,'(I0)') IWDO(JWD)  
         SEGNUM = ADJUSTL(SEGNUM)  
         L      = LEN_TRIM(SEGNUM)  
-        !OPEN  (WDO(JWD,1),FILE=WDOFN(1:L2)//'qwo_'//SEGNUM(1:L)//WDOFN(L1:L1+4),STATUS='UNKNOWN')                   !  SW 9/15/2023     OPEN  (WDO(JWD,1),FILE='qwo_'//SEGNUM(1:L)//'.opt',STATUS='UNKNOWN')
-        !OPEN  (WDO(JWD,2),FILE=WDOFN(1:L2)//'two_'//SEGNUM(1:L)//WDOFN(L1:L1+4),STATUS='UNKNOWN')                   !'.opt',STATUS='UNKNOWN')            
-        OPEN  (WDO(JWD,1),FILE=WDOFN(1:L2)//'q_'//WDOFN(L2+1:L1-1)//'_'//SEGNUM(1:L)//WDOFN(L1:L1+4),STATUS='UNKNOWN')                   !  SW 9/15/2023     OPEN  (WDO(JWD,1),FILE='qwo_'//SEGNUM(1:L)//'.opt',STATUS='UNKNOWN')
-        OPEN  (WDO(JWD,2),FILE=WDOFN(1:L2)//'t_'//WDOFN(L2+1:L1-1)//'_'//SEGNUM(1:L)//WDOFN(L1:L1+4),STATUS='UNKNOWN')                   !'.opt',STATUS='UNKNOWN')            
+        OPEN  (WDO(JWD,1),FILE=WDOFN(1:L2)//'qwo_'//SEGNUM(1:L)//WDOFN(L1:L1+4),STATUS='UNKNOWN')                   !  SW 9/15/2023     OPEN  (WDO(JWD,1),FILE='qwo_'//SEGNUM(1:L)//'.opt',STATUS='UNKNOWN')
+        OPEN  (WDO(JWD,2),FILE=WDOFN(1:L2)//'two_'//SEGNUM(1:L)//WDOFN(L1:L1+4),STATUS='UNKNOWN')                   !'.opt',STATUS='UNKNOWN')            
         
         WRITE (WDO(JWD,1),'(A,I0/A/A)') '$Flow file for segment ',       IWDO(JWD),'To the right of the sum of flows are individual flows starting with downstream then lateral withdrawals','JDAY,QWD(m3s-1),'  
         WRITE (WDO(JWD,2),'(A,I0/A/A)') '$Temperature file for segment ',IWDO(JWD),'To the right of the sum of temperatures are individual temperatures starting with downstream then lateral withdrawals','JDAY,T(C),'  
@@ -1111,15 +1108,11 @@ ENDIF
           IF (IWDO(JWD) >= US(BS(JW)) .AND. IWDO(JWD) <= DS(BE(JW))) EXIT  
         END DO  
         IF (CONSTITUENTS) THEN  
-          !OPEN  (WDO(JWD,3),FILE=WDOFN(1:L2)//'cwo_'//SEGNUM(1:L)//WDOFN(L1:L1+4),STATUS='UNKNOWN')                 !'.opt',STATUS='UNKNOWN')
-          OPEN  (WDO(JWD,3),FILE=WDOFN(1:L2)//'c_'//WDOFN(L2+1:L1-1)//'_'//SEGNUM(1:L)//WDOFN(L1:L1+4),STATUS='UNKNOWN')                 !'.opt',STATUS='UNKNOWN')
-
+          OPEN  (WDO(JWD,3),FILE=WDOFN(1:L2)//'cwo_'//SEGNUM(1:L)//WDOFN(L1:L1+4),STATUS='UNKNOWN')                 !'.opt',STATUS='UNKNOWN')
           WRITE (WDO(JWD,3),'(A,I0//(*(A,",")))') '$Concentration file for segment ',IWDO(JWD),'JDAY', (CNAME2(CN(J)),J=1,NAC)                !CNAME2(CN(1:NAC))  
         END IF  
         IF (DERIVED_CALC) THEN  
-!          OPEN  (WDO(JWD,4),FILE=WDOFN(1:L2)//'dwo_'//SEGNUM(1:L)//WDOFN(L1:L1+4),STATUS='UNKNOWN')                 !'.opt',STATUS='UNKNOWN')
-          OPEN  (WDO(JWD,4),FILE=WDOFN(1:L2)//'d_'//WDOFN(L2+1:L1-1)//'_'//SEGNUM(1:L)//WDOFN(L1:L1+4),STATUS='UNKNOWN')                 !'.opt',STATUS='UNKNOWN')
-
+          OPEN  (WDO(JWD,4),FILE=WDOFN(1:L2)//'dwo_'//SEGNUM(1:L)//WDOFN(L1:L1+4),STATUS='UNKNOWN')                 !'.opt',STATUS='UNKNOWN')
           WRITE (WDO(JWD,4),'(A,I0//(*(A,",")))') 'Derived constituent file for segment ',IWDO(JWD),'JDAY', (CDNAME2(CDN(J,JW)),J=1,NACD(JW))                 !CDNAME2(CDN(1:NACD(JW),JW))  
         END IF
      ! Add a new qwo_layers_xxx file to output flow from each layer for any structure or withdrawal                   !SR 12/19/2022

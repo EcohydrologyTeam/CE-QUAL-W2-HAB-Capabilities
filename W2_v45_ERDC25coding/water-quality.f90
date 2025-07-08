@@ -10,7 +10,7 @@ SUBROUTINE KINETICS
       CDWBC,KF_NH4_SR,KF_NH4_SD,KF_PO4_SR,KF_PO4_SD,NLDOM, NRDOM, NLPOM, NRPOM, NDGP, ORGC_CALC, CO2_DER, HCO3_DER, CO3_DER,  &
       CBODU_DER,TOTSS_DER,O2DG_DER,TURB_DER,SECCHI_DER, CHLA_DER, GAS_TRANSFER_UPDATE, NFEII, NFEOOH, NMNII, NMNO2
   USE ALGAE_TOXINS; USE MetFileRegion
-  Use CEMAVars; USE AlgaeReduceGasTransfer
+  Use CEMAVars
 
 ! Type declarations
   IMPLICIT NONE
@@ -65,23 +65,6 @@ SUBROUTINE KINETICS
   ALLOCATE (FE(KMX,IMX))       
   TICBOD=0.0; FE=0.0; FEMN_TEMP=1.0
   
-        INQUIRE(FILE='W2_AlgaeGasReduction.csv',EXIST=REDUCE_GAS_TRANSFER)     ! SW 8/2024
-        IF(REDUCE_GAS_TRANSFER)THEN
-        OPEN(2450,FILE='W2_AlgaeGasReduction.csv',STATUS='OLD')
-        ALLOCATE(I_ALG(NAL))   ! THIS IS 0 OR 1 IF TO INCLUDE IN TOTAL ALGAE
-        READ(2450,*)
-        READ(2450,*)ICHAR2,IOUTFREQ
-        IF(ICHAR2=='ON')THEN
-            READ(2450,*)
-            READ(2450,*)KHS_ALG,(I_ALG(N),N=1,NAL)
-            OPEN(ALGRED,FILE='AlgaeRedFactorOutput.csv',status='unknown')
-            WRITE(ALGRED,'(A,f8.3,a,<NAL>(a,i3,a,i3,a))')'JDAY,I,AlgSum(surface)gm-3,ReductionFactor, KHS=,',khs_alg,',Active algae groups(=1):,',('Group:',N,'(',i_alg(n),')',n=1,nal) 
-        ELSE
-            REDUCE_GAS_TRANSFER = .FALSE.
-        ENDIF
-        CLOSE(2450)
-        ENDIF
-
   !ZS=0.0    ! SW 1/29/2019
   !ZSR=0.0
   !ZOOP_SETTLING_EXIST=.FALSE.
@@ -286,13 +269,15 @@ ENTRY KINETIC_RATES
       ! Gas Transfer
       IF(GAS_TRANSFER_UPDATE)THEN
           CALL GAS_TRANSFER
-          IF(REDUCE_GAS_TRANSFER)CALL ReduceReaeration
       ENDIF
 
     DO K=KT,KB(I)
       DO1(K,I)          = O2(K,I)/(O2(K,I)+KDO)                  
       DO2(K,I)          = 1.0 - DO1(K,I)                         !O2(K,I)/(O2(K,I)+KDO)
       DO3(K,I)          = (1.0+SIGN(1.0,O2(K,I)-1.E-10)) *0.5
+      DO4(K,I)    = (1.0+SIGN(1.0,ALG_O2LIM  -O2(K,I)))*0.5         !> sch 25Jan2025. Low DO - high mortality option. Set high algal mortality switch/multiplier due to extended low DO.                                 
+      DELT_LOW_DO(K,I)=(DELT_LOW_DO(K,I)+DLT)*DO4(K,I)              !> sch 25Jan2025. Low DO - high mortality option. Record duration (sec) of low DO.
+	  
       SODTRMDDO3        =   SODTRM(K,I)*SDKV(K,I)*DO3(K,I)
       SEDD(K,I)         =   SODTRMDDO3*SED(K,I)    !SODTRM(K,I) *SDKV(K,I)   *SED(K,I) *DO3(K,I)   !CB 10/22/06
       SEDDP(K,I)        =   SODTRMDDO3*SEDP(K,I)   !SODTRM(K,I) *SDKV(K,I)   *SEDP(K,I) *DO3(K,I)
@@ -678,6 +663,9 @@ ENTRY KINETIC_RATES
         ALLIM(K,I,JA)  = 2.718282*(EXP(-LAM2)-EXP(-LAM1))/(GAMMA(K,I)*H2(K,I))
         IF (AHSP(JA)  /= 0.0 .and. po4_calc) APLIM(K,I,JA) =  FDPO4*PO4(K,I)/(FDPO4*PO4(K,I)+AHSP(JA)+NONZERO)       ! cb 10/12/11
         IF (AHSN(JA)  /= 0.0 .and. n_calc) ANLIM(K,I,JA) = (NH4(K,I)+NO3(K,I))/(NH4(K,I)+NO3(K,I)+AHSN(JA)+NONZERO)  ! cb 10/12/11
+        IF ((NH4(K,I)+NO3(K,I)) < CRIT_TIN(JA)) THEN                             !> sch 25Jan2025. Check if N-fixation alternative option is active (e.g., CRIT_TIN>0)
+		  ANLIM(K,I,JA) = (NH4(K,I)+NO3(K,I))/(NH4(K,I)+NO3(K,I)+0.0+NONZERO)    !> sch 25Jan2025. N-fixation option active ... recalculate N limination based on ZERO for AHSN.
+		  ENDIF                                                                  !> sch 25Jan2025. End N-fixation option check.
         IF (AHSSI(JA) /= 0.0 .and. DSI_CALC) ASLIM(K,I,JA) =  DSI(K,I)/(DSI(K,I)+AHSSI(JA)+NONZERO)                  ! cb 10/12/11
         LIMIT          = MIN(APLIM(K,I,JA),ANLIM(K,I,JA),ASLIM(K,I,JA),ALLIM(K,I,JA))
 
@@ -685,7 +673,11 @@ ENTRY KINETIC_RATES
         AGR(K,I,JA) =  ATRM(K,I,JA)*AG(JA)*LIMIT
         ARR(K,I,JA) =  ATRM(K,I,JA)*AR(JA)*DO3(K,I)
         AMR(K,I,JA) = (ATRMR(K,I,JA)+1.0-ATRMF(K,I,JA))*AM(JA)
+        IF(DELT_LOW_DO(K,I)>CRIT_T(JA)) AMR(K,I,JA) = AM_LOW_DO(JA)               !> sch 25Jan2025. Low DO - high mortality option. If critical time for low DO exceeded, set mortality high.               
         AER(K,I,JA) =  MIN((1.0-ALLIM(K,I,JA))*AE(JA)*ATRM(K,I,JA),AGR(K,I,JA))
+
+		
+		
                     
         IF(ALGAE_SETTLING(JA) .AND. ISETTLE==1)THEN
             IF(MIGRATE_MODEL(MIGI) == 1)THEN     !   TIME VARYING VELOCTY
@@ -3118,7 +3110,7 @@ ENTRY DERIVED_CONSTITUENTS
               TOTSS(K,I) = TOTSS(K,I)+ALG(K,I,JA)
               ENDIF
             END DO
-            TOTSS(K,I) = TOTSS(K,I)+TISS(K,I)+POM(K,I)+FEOOH(K,I)+MNO2(K,I)    ! SW 1/29/2025 Added oxidized Fe and Mn to TSS calculation
+            TOTSS(K,I) = TOTSS(K,I)+TISS(K,I)+POM(K,I)
           ENDIF
           IF(CDWBC(TURB_DER,JW)=='      ON')TURB(K,I)    = EXP(CoeffA_Turb(JW)*LOG(TOTSS(K,I)) + CoeffB_Turb(JW))
           IF(CDWBC(SECCHI_DER,JW)=='      ON')SECCHID(K,I) = SECC_PAR(JW)/GAMMA(K,I)        ! Secchi Disk

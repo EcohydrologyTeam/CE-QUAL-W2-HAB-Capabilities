@@ -6,7 +6,7 @@
 	</Platforms>
 	<Configurations>
 		<Configuration Name="Debug|Win32" UseCompiler="ifortCompiler" TargetName="w2_ivf64">
-			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" EnableRecursion="true" EmitDiagnosticsToFile="true" DebugParameter="debugParameterAll" WarnDeclarations="true" RealKIND="realKIND8" LocalSavedScalarsZero="true" InitArrays="true" FloatingPointExceptionHandling="fpe0" Traceback="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebug" UseWindowsLibs="true" Interfaces="true"/>
+			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" EnableRecursion="true" EmitDiagnosticsToFile="true" DebugParameter="debugParameterAll" WarnDeclarations="true" RealKIND="realKIND8" LocalSavedScalarsSNaN="true" LocalSavedScalarsZero="true" InitArrays="true" Traceback="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebug" UseWindowsLibs="true" Interfaces="true"/>
 			<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemWindows"/>
 			<Tool Name="VFResourceCompilerTool"/>
 			<Tool Name="VFMidlTool" SuppressStartupBanner="true" HeaderFileName="$(InputName).h"/>
@@ -39,7 +39,7 @@
 			<Tool Name="VFManifestTool" SuppressStartupBanner="true"/>
 		</Configuration>
 		<Configuration Name="Release|x64" UseCompiler="ifortCompiler" TargetName="w2_v45_64">
-			<Tool Name="VFFortranCompilerTool" AdditionalOptions=" /fpe:0" SuppressStartupBanner="true" Preprocess="preprocessYes" EnableRecursion="true" WarnInterfaces="true" RealKIND="realKIND8" LocalSavedScalarsZero="true" InitArrays="true" FloatingPointExceptionHandling="fpe0" FloatingPointModel="source" Traceback="true" UseWindowsLibs="true"/>
+			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Preprocess="preprocessYes" EnableRecursion="true" WarnInterfaces="true" RealKIND="realKIND8" FloatingPointExceptionHandling="fpe1" FloatingPointModel="source" Traceback="true" UseWindowsLibs="true"/>
 			<Tool Name="VFLinkerTool" SuppressStartupBanner="true" SubSystem="subSystemWindows"/>
 			<Tool Name="VFResourceCompilerTool"/>
 			<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64" HeaderFileName="$(InputName).h"/>
@@ -114,7 +114,6 @@
 			<File RelativePath="..\particle.f90"/>
 			<File RelativePath="..\Plunge_Point.f90"/>
 			<File RelativePath="..\preprocessor_definitions.fpp"/>
-			<File RelativePath="..\ReduceReaerAlgae.f90"/>
 			<File RelativePath="..\restart.f90"/>
 			<File RelativePath="..\screen_output_intel.f90">
 				<FileConfiguration Name="Debug|Win32">
