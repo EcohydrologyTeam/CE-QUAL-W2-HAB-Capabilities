@@ -2419,6 +2419,9 @@ REAL :: V1,V2,R,FAC,GSET,GASDEV
     END SUBROUTINE HISTOGRAM
     SUBROUTINE HISTOGRAM_OUTPUT
         USE Fishy; USE ENVIRPMOD, only: CONE
+        integer :: N,I
+        real :: TEMP_C,VEL_C,D_C
+        
         if(HIST_T)then
           DO N=1,NFISH
           if(t_cnt(N).gt.0.0)then

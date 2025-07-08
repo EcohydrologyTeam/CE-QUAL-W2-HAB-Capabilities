@@ -113,7 +113,7 @@ REAL(R8):: W1,W2,W3, DUMMY
                 C2(K,I,CN(1:NAC)) = C1(K,DHS(JB),CN(1:NAC))                                   ! moved                 !SR 11/30/2021
                 H2(K,I)           = H1(K,I)                                                   ! might be needed       !SR 11/30/2021
                 BH2(K,I)          = BH1(K,I)                                                  ! might be needed       !SR 11/30/2021
-                RHO(K,I)          = DENSITY(T1(K,I),MAX(TDS(K,I),0.0),MAX(TISS(K,I),0.0))     ! can't hurt            !SR 11/30/2021
+                RHO(K,I)          = DENSITY(T1(K,I),DMAX1(TDS(K,I),0.0D0),DMAX1(TISS(K,I),0.0D0))     ! can't hurt    !SR 11/30/2021
               END DO                              ! didn't bother with sed vars, cssk, and a few others for now       !SR 11/30/2021
                         END DO
 
@@ -261,8 +261,8 @@ REAL(R8):: W1,W2,W3, DUMMY
         IF (SNAPSHOT(JW)) WRITE (SNP(JW),'(/1X,13("*"),1X,A,I0,A,F0.3,A,I0,1X,A,I0,13("*"))') '   Add layer ',KT-1,&
                                                         ' at Julian day = ',JDAY,'   NIT = ',NIT,' IZMIN =',IZMIN(JW)   ! SW 1/23/06
         WARNING_OPEN = .TRUE.
-        WRITE (WRN,'(/1X,13("*"),1X,A,I0,A,F0.3,A,I0,1X,A,I0,13("*"))') '   Add layer ',KT-1,&
-                                                        ' at Julian day = ',JDAY,'   NIT = ',NIT,' IZMIN =',IZMIN(JW)   ! SW 1/23/06
+        WRITE (WRN,'(/1X,13("*"),1X,A,I0,A,F0.3,A,I0,1X,A,I0,A,I5,1x,13("*"))') '   Add layer ',KT-1,&
+                                                        ' at Julian day = ',JDAY,'   NIT = ',NIT,' IZMIN =',IZMIN(JW),' Waterbody =',JW   ! SW 1/23/06
 
 !****** Variable initialization
 
@@ -772,7 +772,7 @@ REAL(R8):: W1,W2,W3, DUMMY
       DO WHILE (SUB_LAYER)
         IF (SNAPSHOT(JW)) WRITE (SNP(JW),'(/1X,13("*"),1X,A,I0,A,F0.3,A,I0,1X,A,I0,1x,13("*"))') 'Subtract layer ',&
         KT,' at Julian day = ', JDAY,' NIT = ',NIT,' IZMIN =',IZMIN(JW)      ! SW 1/23/06   
-        WRITE (WRN,'(/1X,13("*"),1X,A,I0,A,F0.3,A,I0,1X,A,I0,1x,13("*"))') 'Subtract layer ',KT,' at Julian day = ', JDAY,' NIT = ',NIT,' IZMIN =',IZMIN(JW)   
+        WRITE (WRN,'(/1X,13("*"),1X,A,I0,A,F0.3,A,I0,1X,A,I0,1x,A,i4,1x,13("*"))') 'Subtract layer ',KT,' at Julian day = ', JDAY,' NIT = ',NIT,' IZMIN =',IZMIN(JW),' WaterBody = ',JW   
 
 !****** Variable initialization
 
