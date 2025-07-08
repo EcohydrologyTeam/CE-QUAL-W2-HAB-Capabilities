@@ -37,8 +37,6 @@ USE GLOBAL;     USE NAMESC; USE GEOMC;  USE LOGICC; USE PREC;  USE SURFHE;  USE 
   sdfirstadd=.true.   ! cb 9/3/17
   BR_NOTECPLOT=.TRUE.    ! SW 8/27/2019
   QWDSAV = 0.0D0;                                                                                                     !SR 06/29/2021
-  FHA    = 0.0D0;  FHASAV = 0.0D0                   !> sch 29Jan2025. Algal harvesting option variables.    
-
   IF (.NOT. RESTART_IN) THEN
     BR_INACTIVE=.FALSE.; WARNING_OPEN          = .FALSE.;JDMIN=0; EPC=0.0; NXTMUK=TMSTRT 
     NSPRF  = 0;   IZMIN  = 0;   KTWB   = 2;   KMIN   = 1;   IMIN   = 1; NH3GASLOSS=0.0
@@ -98,7 +96,6 @@ USE GLOBAL;     USE NAMESC; USE GEOMC;  USE LOGICC; USE PREC;  USE SURFHE;  USE 
   WEIR_CALC             =  NIW > 0; GATES    = NGT > 0; PIPES       = NPI > 0
   PUMPS                 =  NPU > 0; SPILLWAY = NSP > 0; TRIBUTARIES = NTR > 0
   WITHDRAWALS           =  NWD > 0
-  HARVESTING            =  NHF > 0               !> sch 29Jan2025. Algal harvesting option. Set algal harvesting true if at least one harvesting segment location has been read.
   VOLUME_BALANCE        = VBC         == '      ON'
   PLACE_QIN             = PQC         == '      ON'; EVAPORATION        = EVC    == '      ON'
   ENERGY_BALANCE        = EBC         == '      ON'; RH_EVAP            = RHEVC  == '      ON'
@@ -106,7 +103,6 @@ USE GLOBAL;     USE NAMESC; USE GEOMC;  USE LOGICC; USE PREC;  USE SURFHE;  USE 
   INTERP_TRIBS          = TRIC        == '      ON'; INTERP_DTRIBS      = DTRIC  == '      ON'
   INTERP_HEAD           = HDIC        == '      ON'; INTERP_INFLOW      = QINIC  == '      ON'
   INTERP_OUTFLOW        = STRIC       == '      ON'; INTERP_WITHDRAWAL  = WDIC   == '      ON'
-  INTERP_HARVESTING  = HAIC   == 1               !> sch 29Jan2025. Algal harvesting option ... initialize interpolation option
   INTERP_GATE           = GTIC        == '      ON'       ! cb 8/13/2010
   !INTERP_METEOROLOGY    = METIC       == '      ON'; DOWNSTREAM_OUTFLOW = WDOC   == '      ON'
   INTERP_METEOROLOGY    = METIC       == '      ON'

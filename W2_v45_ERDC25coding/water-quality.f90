@@ -293,14 +293,6 @@ ENTRY KINETIC_RATES
       DO1(K,I)          = O2(K,I)/(O2(K,I)+KDO)                  
       DO2(K,I)          = 1.0 - DO1(K,I)                         !O2(K,I)/(O2(K,I)+KDO)
       DO3(K,I)          = (1.0+SIGN(1.0,O2(K,I)-1.E-10)) *0.5
-	  
-	  IF(ALG_O2LIM > 0.0) THEN                                      !> sch 26Jun2025. Check if low DO option active
-        DO4(K,I)    = (1.0+SIGN(1.0,ALG_O2LIM  -O2(K,I)))*0.5       !> sch 25Jan2025. Low DO - high mortality option. Set high algal mortality switch/multiplier due to extended low DO.                                 
-        ELSE
-		DO4(K,I)    = 0.0                                           !> sch 26Jun2025. Make sure DO4 is zero if low DO option not active
-	  ENDIF
-      DELT_LOW_DO(K,I)=(DELT_LOW_DO(K,I)+DLT)*DO4(K,I)              !> sch 25Jan2025. Low DO - high mortality option. Record duration (sec) of low DO.
-	  
       SODTRMDDO3        =   SODTRM(K,I)*SDKV(K,I)*DO3(K,I)
       SEDD(K,I)         =   SODTRMDDO3*SED(K,I)    !SODTRM(K,I) *SDKV(K,I)   *SED(K,I) *DO3(K,I)   !CB 10/22/06
       SEDDP(K,I)        =   SODTRMDDO3*SEDP(K,I)   !SODTRM(K,I) *SDKV(K,I)   *SEDP(K,I) *DO3(K,I)
@@ -686,9 +678,6 @@ ENTRY KINETIC_RATES
         ALLIM(K,I,JA)  = 2.718282*(EXP(-LAM2)-EXP(-LAM1))/(GAMMA(K,I)*H2(K,I))
         IF (AHSP(JA)  /= 0.0 .and. po4_calc) APLIM(K,I,JA) =  FDPO4*PO4(K,I)/(FDPO4*PO4(K,I)+AHSP(JA)+NONZERO)       ! cb 10/12/11
         IF (AHSN(JA)  /= 0.0 .and. n_calc) ANLIM(K,I,JA) = (NH4(K,I)+NO3(K,I))/(NH4(K,I)+NO3(K,I)+AHSN(JA)+NONZERO)  ! cb 10/12/11
-        IF ((NH4(K,I)+NO3(K,I)) < CRIT_TIN(JA)) THEN                             !> sch 25Jan2025. Check if N-fixation alternative option is active (e.g., CRIT_TIN>0)
-		  ANLIM(K,I,JA) = (NH4(K,I)+NO3(K,I))/(NH4(K,I)+NO3(K,I)+0.0+NONZERO)    !> sch 25Jan2025. N-fixation option active ... recalculate N limination based on ZERO for AHSN.
-		  ENDIF                                                                  !> sch 25Jan2025. End N-fixation option check.
         IF (AHSSI(JA) /= 0.0 .and. DSI_CALC) ASLIM(K,I,JA) =  DSI(K,I)/(DSI(K,I)+AHSSI(JA)+NONZERO)                  ! cb 10/12/11
         LIMIT          = MIN(APLIM(K,I,JA),ANLIM(K,I,JA),ASLIM(K,I,JA),ALLIM(K,I,JA))
 
@@ -696,7 +685,6 @@ ENTRY KINETIC_RATES
         AGR(K,I,JA) =  ATRM(K,I,JA)*AG(JA)*LIMIT
         ARR(K,I,JA) =  ATRM(K,I,JA)*AR(JA)*DO3(K,I)
         AMR(K,I,JA) = (ATRMR(K,I,JA)+1.0-ATRMF(K,I,JA))*AM(JA)
-        IF(DELT_LOW_DO(K,I)>CRIT_T(JA)) AMR(K,I,JA) = AM_LOW_DO(JA)               !> sch 25Jan2025. Low DO - high mortality option. If critical time for low DO exceeded, set mortality high.               
         AER(K,I,JA) =  MIN((1.0-ALLIM(K,I,JA))*AE(JA)*ATRM(K,I,JA),AGR(K,I,JA))
                     
         IF(ALGAE_SETTLING(JA) .AND. ISETTLE==1)THEN
