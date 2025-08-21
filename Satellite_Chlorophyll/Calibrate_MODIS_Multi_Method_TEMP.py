@@ -1,16 +1,16 @@
 """
-Calibrated Time Series Analysis with CSV Export for UKL and Detroit Lake
-=====================================================================
+Multi-Method Calibrated Time Series Analysis with CSV Export for UKL and Detroit Lake
+======================================================================================
 
-This script extends the calibrated_time_series_analysis.py to also export:
-1. MODIS-Aqua calibrated chlorophyll data to CSV
-2. MODIS-Terra calibrated chlorophyll data to CSV 
-3. MODIS combined (merged Aqua + Terra) calibrated chlorophyll data to CSV
+This script performs calibration for three different MODIS chlorophyll extraction methods:
+1. Green/Red ratio (500m) - Traditional ocean color approach
+2. NIR/Red ratio (500m) - Optimized for turbid Case 2 waters
+3. NIR/Red ratio (250m) - High spatial resolution 8-day composites
 
 Key Features:
 - Advanced outlier detection (IQR, Z-score, Cook's distance)
 - Robust regression calibration
-- Comprehensive visualization
+- Comprehensive visualization for all three methods
 - Independent sensor validation
 - CSV export functionality for calibrated data
 """
@@ -266,7 +266,7 @@ def match_satellite_insitu(satellite_df, insitu_df, sat_value_col, tolerance_day
 def calibrate_sensor_with_outlier_detection(satellite_df, insitu_df, sat_value_col, sensor_name, 
                                            is_log_scale=True, remove_outliers=True):
     """Calibrate sensor with advanced outlier detection"""
-    print(f"\\nCalibrating {sensor_name}...")
+    print(f"\nCalibrating {sensor_name}...")
     
     # Match satellite data with in situ
     matched = match_satellite_insitu(satellite_df, insitu_df, sat_value_col, tolerance_days=5)
@@ -284,6 +284,9 @@ def calibrate_sensor_with_outlier_detection(satellite_df, insitu_df, sat_value_c
     
     print(f"Initial clean matches: {len(clean_matches)}")
     
+    # Initialize outlier results
+    outlier_results = {'n_outliers_removed': 0}
+    
     # Outlier detection and removal
     if remove_outliers and len(clean_matches) >= 15:
         matched_clean, outlier_flags, outlier_info = detect_outliers_combined(clean_matches)
@@ -296,56 +299,98 @@ def calibrate_sensor_with_outlier_detection(satellite_df, insitu_df, sat_value_c
         
         if n_outliers > 0:
             clean_matches_no_outliers = matched_clean[~outliers_to_remove].copy()
+            outlier_data = matched_clean[outliers_to_remove].copy()
             print(f"Data points after outlier removal: {len(clean_matches_no_outliers)}")
+            
+            outlier_results = {
+                'original_data': clean_matches,
+                'outlier_flags': outlier_flags,
+                'outlier_info': outlier_info,
+                'outliers_removed': outlier_data,
+                'n_outliers_removed': n_outliers
+            }
         else:
             clean_matches_no_outliers = clean_matches.copy()
+            print("No outliers detected by multiple methods")
+            outlier_results['n_outliers_removed'] = 0
     else:
         clean_matches_no_outliers = clean_matches.copy()
         print("Skipping outlier detection")
     
-    # Prepare calibration data
-    X = clean_matches_no_outliers['satellite_value'].values.reshape(-1, 1)
-    
+    # Prepare calibration data for both original and cleaned data
+    X_orig = clean_matches['satellite_value'].values.reshape(-1, 1)
     if is_log_scale:
-        y = np.log10(clean_matches_no_outliers['insitu_chl'].values)
+        y_orig = np.log10(clean_matches['insitu_chl'].values)
     else:
-        y = clean_matches_no_outliers['insitu_chl'].values
+        y_orig = clean_matches['insitu_chl'].values
     
-    # Remove any remaining invalid values
-    valid_idx = np.isfinite(X.flatten()) & np.isfinite(y)
-    X = X[valid_idx]
-    y = y[valid_idx]
+    # Remove any invalid values from original data
+    valid_idx_orig = np.isfinite(X_orig.flatten()) & np.isfinite(y_orig)
+    X_orig = X_orig[valid_idx_orig]
+    y_orig = y_orig[valid_idx_orig]
     
-    if len(X) < 10:
+    # Prepare cleaned calibration data
+    X_clean = clean_matches_no_outliers['satellite_value'].values.reshape(-1, 1)
+    if is_log_scale:
+        y_clean = np.log10(clean_matches_no_outliers['insitu_chl'].values)
+    else:
+        y_clean = clean_matches_no_outliers['insitu_chl'].values
+    
+    # Remove any remaining invalid values from cleaned data
+    valid_idx_clean = np.isfinite(X_clean.flatten()) & np.isfinite(y_clean)
+    X_clean = X_clean[valid_idx_clean]
+    y_clean = y_clean[valid_idx_clean]
+    
+    if len(X_clean) < 10:
         print(f"Error: Not enough valid data points for {sensor_name}")
         return None
     
-    # Fit robust regression
-    model = HuberRegressor()
-    model.fit(X, y)
+    # Fit robust regression for both datasets
+    model_orig = HuberRegressor()
+    model_orig.fit(X_orig, y_orig)
     
-    # Calculate metrics
-    y_pred = model.predict(X)
-    r2 = r2_score(y, y_pred)
-    rmse = np.sqrt(mean_squared_error(y, y_pred))
+    model_clean = HuberRegressor()
+    model_clean.fit(X_clean, y_clean)
+    
+    # Calculate metrics for both models
+    y_pred_orig = model_orig.predict(X_orig)
+    r2_orig = r2_score(y_orig, y_pred_orig)
+    rmse_orig = np.sqrt(mean_squared_error(y_orig, y_pred_orig))
+    
+    y_pred_clean = model_clean.predict(X_clean)
+    r2_clean = r2_score(y_clean, y_pred_clean)
+    rmse_clean = np.sqrt(mean_squared_error(y_clean, y_pred_clean))
     
     print(f"Calibration results for {sensor_name}:")
-    print(f"  - Final matches: {len(X)}")
-    print(f"  - Slope: {model.coef_[0]:.3f}")
-    print(f"  - Intercept: {model.intercept_:.3f}")
-    print(f"  - R²: {r2:.3f}")
-    print(f"  - RMSE: {rmse:.3f}")
+    print(f"  Original data: {len(X_orig)} matches, R² = {r2_orig:.3f}, RMSE = {rmse_orig:.3f}")
+    print(f"  Cleaned data: {len(X_clean)} matches, R² = {r2_clean:.3f}, RMSE = {rmse_clean:.3f}")
+    print(f"  - Slope: {model_clean.coef_[0]:.3f}")
+    print(f"  - Intercept: {model_clean.intercept_:.3f}")
+    
+    # Create outlier analysis plot if outliers were detected
+    if outlier_results['n_outliers_removed'] > 0:
+        # Extract method name from sensor name for plotting
+        method_name = sensor_name.split(' ', 1)[-1] if ' ' in sensor_name else sensor_name
+        sensor_short = sensor_name.split(' ')[0] if ' ' in sensor_name else sensor_name
+        
+        create_outlier_comparison_plot(
+            X_orig, y_orig, X_clean, y_clean, 
+            model_orig, model_clean,
+            sensor_short, method_name, outlier_results,
+            r2_orig, rmse_orig, r2_clean, rmse_clean
+        )
     
     return {
         'sensor': sensor_name,
-        'model': model,
-        'slope': model.coef_[0],
-        'intercept': model.intercept_,
-        'r2': r2,
-        'rmse': rmse,
-        'n_matches': len(X),
+        'model': model_clean,
+        'slope': model_clean.coef_[0],
+        'intercept': model_clean.intercept_,
+        'r2': r2_clean,
+        'rmse': rmse_clean,
+        'n_matches': len(X_clean),
         'is_log_scale': is_log_scale,
-        'matched_data': clean_matches_no_outliers
+        'matched_data': clean_matches_no_outliers,
+        'outlier_results': outlier_results
     }
 
 def apply_calibration(data, value_col, calibration, output_col='chl_calibrated'):
@@ -410,13 +455,16 @@ def combine_modis_sensors(terra_data, aqua_data, date_col='date', value_col='chl
     
     return combined_df
 
-def export_calibrated_data_to_csv(data_dict, lake_name, output_dir='/Users/todd/GitHub/ecohydrology/CE-QUAL-W2-HAB-Capabilities/Satellite_Chlorophyll/'):
-    """Export calibrated MODIS data to CSV files"""
+def export_calibrated_data_to_csv(data_dict, lake_name, method_name, output_dir='/Users/todd/GitHub/ecohydrology/CE-QUAL-W2-HAB-Capabilities/Satellite_Chlorophyll/'):
+    """Export calibrated MODIS data to CSV files for a specific method"""
     
-    print(f"\\nExporting {lake_name} calibrated data to CSV files...")
+    print(f"\nExporting {lake_name} {method_name} calibrated data to CSV files...")
     
     # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
+    
+    # Create method-specific suffix
+    method_suffix = method_name.replace(' ', '_').replace('/', '_')
     
     # Export individual sensor files
     for sensor_name, data in data_dict.items():
@@ -431,10 +479,11 @@ def export_calibrated_data_to_csv(data_dict, lake_name, output_dir='/Users/todd/
             rename_dict = {'chl_calibrated': 'chlorophyll_ugL'}
             export_data = export_data.rename(columns=rename_dict)
             export_data['sensor'] = sensor_name
+            export_data['method'] = method_name
             
             # Create filename
             sensor_clean = sensor_name.replace('-', '_').replace(' ', '_')
-            filename = f"{lake_name}_{sensor_clean}_calibrated_chlorophyll.csv"
+            filename = f"{lake_name}_{sensor_clean}_{method_suffix}_calibrated_chlorophyll.csv"
             filepath = os.path.join(output_dir, filename)
             
             # Export to CSV
@@ -456,25 +505,99 @@ def export_calibrated_data_to_csv(data_dict, lake_name, output_dir='/Users/todd/
         # Rename columns
         rename_dict = {'chl_calibrated': 'chlorophyll_ugL'}
         export_combined = export_combined.rename(columns=rename_dict)
+        export_combined['method'] = method_name
         
         # Create filename for combined data
-        combined_filename = f"{lake_name}_MODIS_Combined_calibrated_chlorophyll.csv"
+        combined_filename = f"{lake_name}_MODIS_Combined_{method_suffix}_calibrated_chlorophyll.csv"
         combined_filepath = os.path.join(output_dir, combined_filename)
         
         # Export combined data
         export_combined.to_csv(combined_filepath, index=False)
         print(f"  Exported MODIS Combined: {len(export_combined)} records -> {combined_filename}")
-        
-        # Print summary stats for combined data
-        terra_count = (export_combined['sensor'] == 'MODIS-Terra').sum()
-        aqua_count = (export_combined['sensor'] == 'MODIS-Aqua').sum()
-        print(f"    Terra records: {terra_count}")
-        print(f"    Aqua records: {aqua_count}")
-        if 'datetime' in export_combined.columns:
-            print(f"    DateTime range: {export_combined['datetime'].min()} to {export_combined['datetime'].max()}")
-        else:
-            print(f"    Date range: {export_combined['date'].min()} to {export_combined['date'].max()}")
-        print(f"    Chlorophyll range: {export_combined['chlorophyll_ugL'].min():.1f} - {export_combined['chlorophyll_ugL'].max():.1f} µg/L")
+
+def create_outlier_comparison_plot(X_orig, y_orig, X_clean, y_clean, model_orig, model_clean, 
+                                 sensor_name, method_name, outlier_results, r2_orig, rmse_orig, r2_clean, rmse_clean):
+    """Create comprehensive plots showing before/after outlier removal"""
+    
+    fig, axes = plt.subplots(2, 3, figsize=(18, 12))
+    fig.suptitle(f'MODIS {sensor_name} {method_name} Calibration: Outlier Analysis', fontsize=16, fontweight='bold')
+    
+    # Define consistent axis ranges
+    x_min = min(X_orig.min(), X_clean.min()) - 0.1
+    x_max = max(X_orig.max(), X_clean.max()) + 0.1
+    y_min_log = min(y_orig.min(), y_clean.min()) - 0.1
+    y_max_log = max(y_orig.max(), y_clean.max()) + 0.1
+    
+    # Row 1: Original data
+    # Original scatter plot
+    axes[0, 0].scatter(X_orig.flatten(), np.power(10, y_orig), alpha=0.6, s=30, color='blue', label='Data points')
+    if 'outliers_removed' in outlier_results and len(outlier_results['outliers_removed']) > 0:
+        outlier_data = outlier_results['outliers_removed']
+        X_outliers = outlier_data['satellite_value'].values
+        y_outliers = np.log10(outlier_data['insitu_chl'].values)
+        axes[0, 0].scatter(X_outliers, np.power(10, y_outliers), alpha=0.8, s=50, color='red', 
+                          marker='x', label=f'Outliers ({len(outlier_data)})')
+    
+    x_range = np.linspace(x_min, x_max, 100)
+    y_range_pred_orig = model_orig.predict(x_range.reshape(-1, 1))
+    axes[0, 0].plot(x_range, np.power(10, y_range_pred_orig), 'r-', linewidth=2, label='Regression line')
+    axes[0, 0].set_xlabel('Satellite Index')
+    axes[0, 0].set_ylabel('In Situ Chlorophyll (µg/L)')
+    axes[0, 0].set_title(f'Original Data\nR² = {r2_orig:.3f}, RMSE = {rmse_orig:.3f}')
+    axes[0, 0].set_yscale('log')
+    axes[0, 0].grid(True, alpha=0.3)
+    axes[0, 0].legend()
+    
+    # Original residuals
+    residuals_orig = y_orig - model_orig.predict(X_orig)
+    axes[0, 1].scatter(model_orig.predict(X_orig), residuals_orig, alpha=0.6, s=30, color='blue')
+    axes[0, 1].axhline(y=0, color='r', linestyle='--')
+    axes[0, 1].set_xlabel('Predicted log10(Chl)')
+    axes[0, 1].set_ylabel('Residuals')
+    axes[0, 1].set_title('Original Data Residuals')
+    axes[0, 1].grid(True, alpha=0.3)
+    
+    # Q-Q plot for original residuals
+    from scipy import stats
+    stats.probplot(residuals_orig, dist="norm", plot=axes[0, 2])
+    axes[0, 2].set_title('Original Data Q-Q Plot')
+    axes[0, 2].grid(True, alpha=0.3)
+    
+    # Row 2: Cleaned data
+    # Cleaned scatter plot
+    axes[1, 0].scatter(X_clean.flatten(), np.power(10, y_clean), alpha=0.6, s=30, color='green', label='Clean data')
+    y_range_pred_clean = model_clean.predict(x_range.reshape(-1, 1))
+    axes[1, 0].plot(x_range, np.power(10, y_range_pred_clean), 'r-', linewidth=2, label='Regression line')
+    axes[1, 0].set_xlabel('Satellite Index')
+    axes[1, 0].set_ylabel('In Situ Chlorophyll (µg/L)')
+    axes[1, 0].set_title(f'Cleaned Data (Outliers Removed)\nR² = {r2_clean:.3f}, RMSE = {rmse_clean:.3f}')
+    axes[1, 0].set_yscale('log')
+    axes[1, 0].grid(True, alpha=0.3)
+    axes[1, 0].legend()
+    
+    # Cleaned residuals
+    residuals_clean = y_clean - model_clean.predict(X_clean)
+    axes[1, 1].scatter(model_clean.predict(X_clean), residuals_clean, alpha=0.6, s=30, color='green')
+    axes[1, 1].axhline(y=0, color='r', linestyle='--')
+    axes[1, 1].set_xlabel('Predicted log10(Chl)')
+    axes[1, 1].set_ylabel('Residuals')
+    axes[1, 1].set_title('Cleaned Data Residuals')
+    axes[1, 1].grid(True, alpha=0.3)
+    
+    # Q-Q plot for cleaned residuals
+    stats.probplot(residuals_clean, dist="norm", plot=axes[1, 2])
+    axes[1, 2].set_title('Cleaned Data Q-Q Plot')
+    axes[1, 2].grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    
+    # Clean method name for filename
+    method_clean = method_name.replace(' ', '_').replace('/', '_')
+    filename = f'MODIS_{sensor_name}_{method_clean}_outlier_analysis.png'
+    plt.savefig(filename, dpi=300, bbox_inches='tight')
+    plt.show()
+    
+    print(f"Outlier analysis plot saved: {filename}")
 
 def create_time_series_plot(data_dict, insitu_data, title, filename, lake_name):
     """Create comprehensive time series plot"""
@@ -483,14 +606,15 @@ def create_time_series_plot(data_dict, insitu_data, title, filename, lake_name):
     # Plot in situ data
     if insitu_data is not None and len(insitu_data) > 0:
         label = 'In situ data' if lake_name == 'UKL' else 'YSI data'
-        # Plot magenta square markers
+        # Plot red square markers
         ax.scatter(insitu_data['date'], insitu_data['chlorophyll_ugL'], 
                   c='red', marker='s', s=12, alpha=0.7, label=label, zorder=1)
     
     # Define colors and markers for satellite data
     sensor_styles = {
         'MODIS-Terra': {'color': 'orange', 'marker': 'o'},
-        'MODIS-Aqua': {'color': 'green', 'marker': 'o'}
+        'MODIS-Aqua': {'color': 'green', 'marker': 'o'},
+        'MODIS-Aqua-250m': {'color': 'blue', 'marker': '^'}
     }
     
     # Plot satellite data using datetime if available
@@ -530,109 +654,203 @@ def create_time_series_plot(data_dict, insitu_data, title, filename, lake_name):
     
     print(f"Plot saved: {filename}")
 
-def main():
-    """Main analysis function"""
-    print("="*80)
-    print("CALIBRATED TIME SERIES ANALYSIS WITH CSV EXPORT FOR UKL AND DETROIT LAKE")
-    print("="*80)
+def process_method(method_config, ukl_insitu, detroit_insitu):
+    """Process a single method configuration"""
     
-    # Load in situ data
-    print("\\nLoading in situ data...")
-    ukl_insitu = load_ukl_insitu_data()
-    detroit_insitu = load_detroit_insitu_data()
-    
-    print(f"UKL in situ: {len(ukl_insitu)} records")
-    print(f"Detroit in situ: {len(detroit_insitu)} records")
+    method_name = method_config['name']
+    print(f"\n{'='*80}")
+    print(f"PROCESSING {method_name.upper()} METHOD")
+    print(f"{'='*80}")
     
     # Load UKL satellite data for calibration
-    print("\\nLoading UKL satellite data for calibration...")
-    ukl_modis_terra = read_data('/Users/todd/GitHub/ecohydrology/CE-QUAL-W2-HAB-Capabilities/Satellite_Chlorophyll/Klamath_MODIS_Terra_500m_ROI.csv')
-    ukl_modis_aqua = read_data('/Users/todd/GitHub/ecohydrology/CE-QUAL-W2-HAB-Capabilities/Satellite_Chlorophyll/Klamath_MODIS_Aqua_500m_ROI.csv')
+    print(f"\nLoading UKL satellite data for {method_name}...")
+    ukl_modis_terra = None
+    ukl_modis_aqua = None
     
-    # Add sensor labels
-    ukl_modis_terra['sensor'] = 'Terra'
-    ukl_modis_aqua['sensor'] = 'Aqua'
+    # Check if Terra file exists and load
+    if 'ukl_terra_file' in method_config and os.path.exists(method_config['ukl_terra_file']):
+        ukl_modis_terra = read_data(method_config['ukl_terra_file'])
+        ukl_modis_terra['sensor'] = 'Terra'
+        print(f"UKL MODIS Terra: {len(ukl_modis_terra)} records")
     
-    print(f"UKL MODIS Terra: {len(ukl_modis_terra)} records")
-    print(f"UKL MODIS Aqua: {len(ukl_modis_aqua)} records")
+    # Check if Aqua file exists and load
+    if 'ukl_aqua_file' in method_config and os.path.exists(method_config['ukl_aqua_file']):
+        ukl_modis_aqua = read_data(method_config['ukl_aqua_file'])
+        ukl_modis_aqua['sensor'] = 'Aqua'
+        print(f"UKL MODIS Aqua: {len(ukl_modis_aqua)} records")
     
     # Perform calibrations
-    print("\\n" + "="*60)
-    print("PERFORMING CALIBRATIONS AGAINST UKL IN SITU DATA")
-    print("="*60)
+    print(f"\nPerforming calibrations against UKL in situ data...")
     
-    terra_cal = calibrate_sensor_with_outlier_detection(
-        ukl_modis_terra, ukl_insitu, 'log_ratio', 'MODIS-Terra', is_log_scale=True
-    )
+    terra_cal = None
+    aqua_cal = None
     
-    aqua_cal = calibrate_sensor_with_outlier_detection(
-        ukl_modis_aqua, ukl_insitu, 'log_ratio', 'MODIS-Aqua', is_log_scale=True
-    )
+    if ukl_modis_terra is not None:
+        terra_cal = calibrate_sensor_with_outlier_detection(
+            ukl_modis_terra, ukl_insitu, method_config['value_col'], 
+            f'MODIS-Terra {method_name}', is_log_scale=True
+        )
     
-    # Load Detroit and UKL satellite data for time series
-    print("\\nLoading satellite data for time series...")
+    if ukl_modis_aqua is not None:
+        aqua_cal = calibrate_sensor_with_outlier_detection(
+            ukl_modis_aqua, ukl_insitu, method_config['value_col'], 
+            f'MODIS-Aqua {method_name}', is_log_scale=True
+        )
     
-    # Detroit data
-    detroit_modis_terra = read_data('/Users/todd/GitHub/ecohydrology/CE-QUAL-W2-HAB-Capabilities/Satellite_Chlorophyll/Detroit_MODIS_Terra_500m_ROI.csv')
-    detroit_modis_aqua = read_data('/Users/todd/GitHub/ecohydrology/CE-QUAL-W2-HAB-Capabilities/Satellite_Chlorophyll/Detroit_MODIS_Aqua_500m_ROI.csv')
+    # Load Detroit satellite data for time series
+    print(f"\nLoading Detroit satellite data for {method_name}...")
+    detroit_modis_terra = None
+    detroit_modis_aqua = None
+    
+    # Check if Detroit Terra file exists and load
+    if 'detroit_terra_file' in method_config and os.path.exists(method_config['detroit_terra_file']):
+        detroit_modis_terra = read_data(method_config['detroit_terra_file'])
+        print(f"Detroit MODIS Terra: {len(detroit_modis_terra)} records")
+    
+    # Check if Detroit Aqua file exists and load
+    if 'detroit_aqua_file' in method_config and os.path.exists(method_config['detroit_aqua_file']):
+        detroit_modis_aqua = read_data(method_config['detroit_aqua_file'])
+        print(f"Detroit MODIS Aqua: {len(detroit_modis_aqua)} records")
     
     # Apply calibrations
-    print("\\nApplying calibrations...")
+    print(f"\nApplying calibrations for {method_name}...")
     
     # UKL calibrated data
-    ukl_terra_cal = apply_calibration(ukl_modis_terra, 'log_ratio', terra_cal)
-    ukl_aqua_cal = apply_calibration(ukl_modis_aqua, 'log_ratio', aqua_cal)
+    ukl_terra_cal_data = None
+    ukl_aqua_cal_data = None
+    
+    if ukl_modis_terra is not None and terra_cal is not None:
+        ukl_terra_cal_data = apply_calibration(ukl_modis_terra, method_config['value_col'], terra_cal)
+    
+    if ukl_modis_aqua is not None and aqua_cal is not None:
+        ukl_aqua_cal_data = apply_calibration(ukl_modis_aqua, method_config['value_col'], aqua_cal)
     
     # Detroit calibrated data
-    detroit_terra_cal = apply_calibration(detroit_modis_terra, 'log_ratio', terra_cal)
-    detroit_aqua_cal = apply_calibration(detroit_modis_aqua, 'log_ratio', aqua_cal)
+    detroit_terra_cal_data = None
+    detroit_aqua_cal_data = None
+    
+    if detroit_modis_terra is not None and terra_cal is not None:
+        detroit_terra_cal_data = apply_calibration(detroit_modis_terra, method_config['value_col'], terra_cal)
+    
+    if detroit_modis_aqua is not None and aqua_cal is not None:
+        detroit_aqua_cal_data = apply_calibration(detroit_modis_aqua, method_config['value_col'], aqua_cal)
     
     # Prepare data dictionaries for CSV export
-    ukl_data = {
-        'MODIS-Terra': ukl_terra_cal,
-        'MODIS-Aqua': ukl_aqua_cal
-    }
+    ukl_data = {}
+    detroit_data = {}
     
-    detroit_data = {
-        'MODIS-Terra': detroit_terra_cal,
-        'MODIS-Aqua': detroit_aqua_cal
-    }
+    # Add Terra data if exists
+    if ukl_terra_cal_data is not None:
+        ukl_data['MODIS-Terra'] = ukl_terra_cal_data
+    if detroit_terra_cal_data is not None:
+        detroit_data['MODIS-Terra'] = detroit_terra_cal_data
+    
+    # Add Aqua data if exists - use special label for 250m
+    if ukl_aqua_cal_data is not None:
+        sensor_label = 'MODIS-Aqua-250m' if '250m' in method_name else 'MODIS-Aqua'
+        ukl_data[sensor_label] = ukl_aqua_cal_data
+    if detroit_aqua_cal_data is not None:
+        sensor_label = 'MODIS-Aqua-250m' if '250m' in method_name else 'MODIS-Aqua'
+        detroit_data[sensor_label] = detroit_aqua_cal_data
     
     # Export calibrated data to CSV files
-    print("\\n" + "="*60)
-    print("EXPORTING CALIBRATED DATA TO CSV FILES")
-    print("="*60)
-    
-    export_calibrated_data_to_csv(ukl_data, "UKL")
-    export_calibrated_data_to_csv(detroit_data, "Detroit")
+    export_calibrated_data_to_csv(ukl_data, "UKL", method_name)
+    export_calibrated_data_to_csv(detroit_data, "Detroit", method_name)
     
     # Create time series plots
-    print("\\nCreating time series plots...")
+    print(f"\nCreating time series plots for {method_name}...")
     
     # UKL plot
     create_time_series_plot(
         ukl_data, ukl_insitu,
-        'Upper Klamath Lake - Calibrated Satellite Chlorophyll vs In Situ Data',
-        'UKL_calibrated_time_series.png',
+        f'Upper Klamath Lake - Calibrated Satellite Chlorophyll vs In Situ Data ({method_name})',
+        f'UKL_calibrated_time_series_{method_name.replace(" ", "_").replace("/", "_")}.png',
         'UKL'
     )
     
     # Detroit plot
     create_time_series_plot(
         detroit_data, detroit_insitu,
-        'Detroit Lake - Calibrated Satellite Chlorophyll vs YSI Data',
-        'Detroit_calibrated_time_series.png',
+        f'Detroit Lake - Calibrated Satellite Chlorophyll vs YSI Data ({method_name})',
+        f'Detroit_calibrated_time_series_{method_name.replace(" ", "_").replace("/", "_")}.png',
         'Detroit'
     )
     
-    # Print summary statistics
-    print("\\n" + "="*60)
-    print("SUMMARY STATISTICS")
-    print("="*60)
+    return ukl_data, detroit_data
+
+def main():
+    """Main analysis function"""
+    print("="*80)
+    print("MULTI-METHOD CALIBRATED TIME SERIES ANALYSIS")
+    print("="*80)
     
-    def print_data_summary(data_dict, lake_name):
-        print(f"\\n{lake_name} Lake:")
-        for sensor_name, data in data_dict.items():
+    # Load in situ data
+    print("\nLoading in situ data...")
+    ukl_insitu = load_ukl_insitu_data()
+    detroit_insitu = load_detroit_insitu_data()
+    
+    print(f"UKL in situ: {len(ukl_insitu)} records")
+    print(f"Detroit in situ: {len(detroit_insitu)} records")
+    
+    # Define method configurations
+    methods = [
+        {
+            'name': 'Green/Red 500m',
+            'ukl_terra_file': '/Users/todd/GitHub/ecohydrology/CE-QUAL-W2-HAB-Capabilities/Satellite_Chlorophyll/Klamath_MODIS_Terra_Chlorophyll_B4_Green_B1_Red_500m.csv',
+            'ukl_aqua_file': '/Users/todd/GitHub/ecohydrology/CE-QUAL-W2-HAB-Capabilities/Satellite_Chlorophyll/Klamath_MODIS_Aqua_Chlorophyll_B4_Green_B1_Red_500m.csv',
+            'detroit_terra_file': '/Users/todd/GitHub/ecohydrology/CE-QUAL-W2-HAB-Capabilities/Satellite_Chlorophyll/Detroit_MODIS_Terra_Chlorophyll_B4_Green_B1_Red_500m.csv',
+            'detroit_aqua_file': '/Users/todd/GitHub/ecohydrology/CE-QUAL-W2-HAB-Capabilities/Satellite_Chlorophyll/Detroit_MODIS_Aqua_Chlorophyll_B4_Green_B1_Red_500m.csv',
+            'value_col': 'log_ratio'
+        },
+        {
+            'name': 'NIR/Red 500m',
+            'ukl_terra_file': '/Users/todd/GitHub/ecohydrology/CE-QUAL-W2-HAB-Capabilities/Satellite_Chlorophyll/UKL_MODIS_Terra_Chlorophyll_B2_NIR_B1_Red_500m.csv',
+            'ukl_aqua_file': '/Users/todd/GitHub/ecohydrology/CE-QUAL-W2-HAB-Capabilities/Satellite_Chlorophyll/UKL_MODIS_Aqua_Chlorophyll_B2_NIR_B1_Red_500m.csv',
+            'detroit_terra_file': '/Users/todd/GitHub/ecohydrology/CE-QUAL-W2-HAB-Capabilities/Satellite_Chlorophyll/Detroit_MODIS_Terra_Chlorophyll_B2_NIR_B1_Red_500m.csv',
+            'detroit_aqua_file': '/Users/todd/GitHub/ecohydrology/CE-QUAL-W2-HAB-Capabilities/Satellite_Chlorophyll/Detroit_MODIS_Aqua_Chlorophyll_B2_NIR_B1_Red_500m.csv',
+            'value_col': 'log_nir_red'
+        },
+        {
+            'name': 'NIR/Red 250m',
+            'ukl_aqua_file': '/Users/todd/GitHub/ecohydrology/CE-QUAL-W2-HAB-Capabilities/Satellite_Chlorophyll/UKL_MODIS_Aqua_Chlorophyll_B2_NIR_B1_Red_250m.csv',
+            'detroit_aqua_file': '/Users/todd/GitHub/ecohydrology/CE-QUAL-W2-HAB-Capabilities/Satellite_Chlorophyll/Detroit_MODIS_Aqua_Chlorophyll_B2_NIR_B1_Red_250m.csv',
+            'value_col': 'log_nir_red'
+        }
+    ]
+    
+    # Process each method
+    all_results = {}
+    for method_config in methods:
+        ukl_data, detroit_data = process_method(method_config, ukl_insitu, detroit_insitu)
+        all_results[method_config['name']] = {
+            'ukl': ukl_data,
+            'detroit': detroit_data
+        }
+    
+    # Print summary statistics
+    print("\n" + "="*80)
+    print("SUMMARY STATISTICS FOR ALL METHODS")
+    print("="*80)
+    
+    for method_name, results in all_results.items():
+        print(f"\n{method_name}:")
+        print("-" * 40)
+        
+        # UKL statistics
+        print("Upper Klamath Lake:")
+        for sensor_name, data in results['ukl'].items():
+            if data is not None and len(data) > 0:
+                col = 'chl_calibrated'
+                if col in data.columns:
+                    values = data[col].dropna()
+                    if len(values) > 0:
+                        print(f"  {sensor_name}: {len(values)} points, "
+                              f"range {values.min():.1f}-{values.max():.1f} µg/L, "
+                              f"mean {values.mean():.1f} µg/L")
+        
+        # Detroit statistics
+        print("Detroit Lake:")
+        for sensor_name, data in results['detroit'].items():
             if data is not None and len(data) > 0:
                 col = 'chl_calibrated'
                 if col in data.columns:
@@ -642,20 +860,12 @@ def main():
                               f"range {values.min():.1f}-{values.max():.1f} µg/L, "
                               f"mean {values.mean():.1f} µg/L")
     
-    print_data_summary(ukl_data, "Upper Klamath")
-    print_data_summary(detroit_data, "Detroit")
-    
-    print("\\nAnalysis completed successfully!")
-    print("Generated files:")
-    print("- UKL_calibrated_time_series.png")
-    print("- Detroit_calibrated_time_series.png")
-    print("\\nGenerated CSV files:")
-    print("- UKL_MODIS_Terra_calibrated_chlorophyll.csv")
-    print("- UKL_MODIS_Aqua_calibrated_chlorophyll.csv")
-    print("- UKL_MODIS_Combined_calibrated_chlorophyll.csv")
-    print("- Detroit_MODIS_Terra_calibrated_chlorophyll.csv")
-    print("- Detroit_MODIS_Aqua_calibrated_chlorophyll.csv")
-    print("- Detroit_MODIS_Combined_calibrated_chlorophyll.csv")
+    print("\n" + "="*80)
+    print("Analysis completed successfully!")
+    print("Generated files for each method:")
+    print("- Time series plots")
+    print("- Individual sensor CSV files")
+    print("- Combined MODIS CSV files")
 
 if __name__ == "__main__":
     main()
