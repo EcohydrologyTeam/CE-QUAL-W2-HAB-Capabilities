@@ -195,7 +195,7 @@ END IF
   ALLOCATE (VBC(NWB),    EBC(NWB),    MBC(NWB),    PQC(NWB),    EVC(NWB),    PRC(NWB))
   ALLOCATE (WINDC(NWB),  QINC(NWB),   QOUTC(NWB),  HEATC(NWB),  SLHTC(NWB))
   ALLOCATE (QINIC(NBR),  DTRIC(NBR),  TRIC(NTR),   WDIC(NWD),   HDIC(NBR),   METIC(NWB))
-  ALLOCATE (IHA(IMX),    HAIC(IMX))                  !> sch 23May2025. Algal harvesting interpolation switch ... read these in the "harvest_option_input.csv" input file (if it exists).
+  ALLOCATE (IHA(IMX))       !>,    HAIC(IMX))  !> sch 23May2025. Algal harvesting interpolation switch NO longer applicable ... read these in the "harvest_option_input.csv" input file (if it exists).
   ALLOCATE (EXC(NWB),    EXIC(NWB))
   ALLOCATE (SLTRC(NWB),  THETA(NWB),  FRICC(NWB),  NAF(NWB),    ELTMF(NWB), Z0(NWB))
   ALLOCATE (ZMIN(NWB),   IZMIN(NWB))
@@ -426,7 +426,7 @@ END IF
   ALLOCATE (IUPU(NPU),   IDPU(NPU),   EPU(NPU),    STRTPU(NPU), ENDPU(NPU),  EONPU(NPU),  EOFFPU(NPU), QPU(NPU),   PPUC(NPU))
   ALLOCATE (ETPU(NPU),   EBPU(NPU),   KTPU(NPU),   KBPU(NPU),   JWUPU(NPU),  JWDPU(NPU),  JBUPU(NPU),  JBDPU(NPU), PUMPON(NPU),PUMP_DOWNSTREAM(NPU))
   ALLOCATE (IWD(NWDT),   KWD(NWDT),   QWD(NWDT),   EWD(NWDT),   KTW(NWDT),   KBW(NWDT), QWDSAV(NWDT))
-  ALLOCATE (JBHA(IMX),   FHA(IMX),    FHASAV(IMX), INTERP_HARVESTING(IMX))  !> sch 29Jan2025. Algal harvesting option. Use IMX, since neeed to allocate before the segment count for harvesting is read.
+  ALLOCATE (JBHA(IMX),   FHA(IMX),    FHASAV(IMX))  !> sch 30Aug2025. Currently not using INTERP_HARVESTING(IMX). Algal harvesting option. Use IMX, since neeed to allocate before the segment count for harvesting is read.
   ALLOCATE (ITR(NTRT),   QTRFN(NTR),  TTRFN(NTR),  CTRFN(NTR),  ELTRT(NTRT), ELTRB(NTRT), TRC(NTRT),   JBTR(NTRT), QTRF(KMX,NTRT))
   ALLOCATE (TTLB(IMX),   TTRB(IMX),   CLLB(IMX),   CLRB(IMX))
   ALLOCATE (SRLB1(IMX),  SRRB1(IMX),  SRLB2(IMX),  SRRB2(IMX),  SRFJD1(IMX), SHADEI(IMX), SRFJD2(IMX))
@@ -2339,6 +2339,7 @@ ENDIF
   HARVEST_OPTION_EXIST = .FALSE.
   NHF = 0                                                              !> Initialize NHF to make sure no impact if the input file doesn't exist.
   INQUIRE(FILE='harvest_option_input.csv',EXIST=HARVEST_OPTION_EXIST)  !> Assume input file is .csv type (add .npt option later if needed).
+!xxx  IF(HARVEST_OPTION_EXIST) write (9922,*) "Harvesting option file exists."
   IF(HARVEST_OPTION_EXIST) THEN
     OPEN(NUNIT,file='harvest_option_input.csv',status='old')
     READ (NUNIT, *)                                                    !> Skip header line
@@ -2348,8 +2349,8 @@ ENDIF
     READ (NUNIT, *) NHF                                                !> Read number of segments with time-varying harvesting inputs.
     READ (NUNIT, *)                                                    !> Skip descriptive line
     READ (NUNIT, *) (IHA(I), I=1,NHF)                                  !> Read list of segments with time-varying harvesting inputs.
-    READ (NUNIT, *)                                                    !> Skip descriptive line
-    READ (NUNIT, *) (HAIC(I), I=1,NHF)                                 !> Read interpolation option for each segment with time-varying harvesting inputs.
+  !  READ (NUNIT, *)                                                   !> sch 30Aug2025. Currently not used. Skip descriptive line
+  !  READ (NUNIT, *) (HAIC(I), I=1,NHF)                                !> sch 30Aug2025. Currently not used. No longer applicable ... Read interpolation option for each segment with time-varying harvesting inputs.
     CLOSE(NUNIT)
   ENDIF
 !> sch 28Jan2025. End algal harvesting option input reading.

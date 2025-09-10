@@ -467,31 +467,23 @@ SUBROUTINE TIME_VARYING_DATA
     QWDSAV(1:NWD) = QWD(1:NWD)                                                                                        !SR 06/29/2021
   END IF
     
-!> sch 29Jan2025. Start algal harvesting option. Algal harvesting time-series inputs. Employing the file structure used for segment withdrawal inputs. 
+!> sch 30Aug2025. Start algal harvesting option. Algal harvesting time-series inputs. Employing the file structure used for segment withdrawal inputs. 
   IF (NHF > 0) THEN
+!xxx    write (9922, *) "NHF = ", NHF, "Harvest time series file =", HAFFN
     HAF = NPT; NPT = NPT+1
     OPEN (HAF,FILE=HAFFN,STATUS='OLD')
-    READ (HAF,'(A1)') INFORMAT
-    IF(INFORMAT=='$') HAFF=.TRUE.
-    IF(HAFF) THEN
     READ (HAF,'(/)')
     READ (HAF,*) NXFHA2,(FHANX(JHA),JHA=1,NHF)                         !> Algal harvesting option. JDAY for removal, segment-specific fractions of algae removed. sch 29Jan2025. 
+!xxx    write (9922,*) NXFHA2,(FHANX(JHA),JHA=1,NHF)
     DO JHA = 1,NHF 
       FHA(JHA)  = FHANX(JHA)
       FHAO(JHA) = FHANX(JHA)
     END DO
     READ (HAF,*) NXFHA1,(FHANX(JHA),JHA=1,NHF)                         !> Algal harvesting option. JDAY for next removal, segment-specific fractions of algae removed. sch 29Jan2025. 
-    ELSE
-    READ (HAF,'(//10F8.0:/(8X,9F8.0))') NXFHA2,(FHANX(JHA),JHA=1,NHF)  !> Algal harvesting option. JDAY for removal, segment-specific fractions of algae removed. sch 29Jan2025. 
-    DO JHA = 1,NHF
-      FHA(JHA)  = FHANX(JHA)
-      FHAO(JHA) = FHANX(JHA)
-    END DO
-    READ (HAF,'(10F8.0:/(8X,9F8.0))') NXFHA1,(FHANX(JHA),JHA=1,NHF)    !> Algal harvesting option. JDAY for next removal, segment-specific fractions of algae removed. sch 29Jan2025. 
-    ENDIF
+!xxx    write (9922,*) NXFHA1,(FHANX(JHA),JHA=1,NHF)
     FHASAV(1:NHF) = FHA(1:NHF)                                         !> Algal harvesting option. Save FHA for later use. sch 29Jan2025. 
   END IF
-!> sch 29Jan2025. End reading algal harvesting option inputs. 
+!> sch 30Aug2025. End reading algal harvesting option inputs. 
   
 IF (TRIBUTARIES) THEN
     DO JT=1,NTR
@@ -1707,7 +1699,7 @@ ENTRY READ_INPUT_DATA (NXTVD)
     NXTVD = MIN(NXTVD,NXQWD1)
   END IF
   
-!> sch 29Jan2025. Start algal harvesting option. If algal harvesting option active (NHF>0 as read in 1st input file), then read the segment-specific reduction inputs. 
+!> sch 30Aug2025. Start algal harvesting option. If algal harvesting option active (NHF>0 as read in 1st input file), then read the segment-specific reduction inputs. 
   IF (NHF > 0) THEN
     DO WHILE (JDAY >= NXFHA1)
       NXFHA2 = NXFHA1
@@ -1715,16 +1707,13 @@ ENTRY READ_INPUT_DATA (NXTVD)
         FHA(JHA)  = FHANX(JHA)
         FHAO(JHA) = FHANX(JHA)
       END DO
-      IF(HAFF)THEN
       READ (HAF,*) NXFHA1,(FHANX(JHA),JHA=1,NHF)  
-      ELSE
-      READ (HAF,'(10F8.0:/(8X,9F8.0))') NXFHA1,(FHANX(JHA),JHA=1,NHF)
-      ENDIF
+!xxx      write (9922,*) NXFHA1,(FHANX(JHA),JHA=1,NHF)
     FHASAV(1:NHF) = FHA(1:NHF)                                                          
     END DO
     NXTVD = MIN(NXTVD,NXFHA1)
   END IF
-!> sch 29Jan2025. End algal harvesting option.
+!> sch 30Aug2025. End algal harvesting option.
   
   ! Spillways DO gas
   DO N=1,NSP              ! SW 1/18/2022
@@ -2869,15 +2858,16 @@ IF(.NOT.Met_Regions)THEN
   END IF
 
 !> sch 29Jan2025. Start algal harvesting option. Interpolate if option for that is active.
-  IF (NHF > 0) THEN
-    QRATIO = (NXFHA1-JDAY)/(NXFHA1-NXFHA2)
-    DO JHA=1,NHF
-      IF (INTERP_HARVESTING(JHA)) THEN
-        FHA(JHA) = (1.0-QRATIO)*FHANX(JHA)+QRATIO*FHAO(JHA)
-        FHASAV(JHA) = FHA(JHA)
-      END IF     
-    END DO
-  END IF
+!> sch 30Aug2025. This is currently not relevant for harvesting option. Comment out and retain code for later consideration.
+!  IF (NHF > 0) THEN
+!    QRATIO = (NXFHA1-JDAY)/(NXFHA1-NXFHA2)
+!    DO JHA=1,NHF
+!      IF (INTERP_HARVESTING(JHA)) THEN
+!        FHA(JHA) = (1.0-QRATIO)*FHANX(JHA)+QRATIO*FHAO(JHA)
+!        FHASAV(JHA) = FHA(JHA)
+!      END IF     
+!    END DO
+!  END IF
 !> sch 29Jan2025. End algal harvesting option.
 
 ! Gates  adding interpolation cb 8/13/2010  

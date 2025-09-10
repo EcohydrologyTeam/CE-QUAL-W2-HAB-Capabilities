@@ -321,7 +321,7 @@ IF (ERROR_OPEN) THEN                                           ! modified to be 
   DEALLOCATE (B2SP,   AGASSP, BGASSP, CGASSP, EQSP,   GASSPC, JBUSP,  JBDSP,  STRTPU, ENDPU,  EONPU,  EOFFPU, QPU,    PPUC)
   DEALLOCATE (IUPU,   IDPU,   EPU,    ETPU,   EBPU,   KTPU,   KBPU,   JWUPU,  JWDPU,  JBUPU,  JBDPU,  PUMPON, KTW,    KBW, PUMP_DOWNSTREAM)
   DEALLOCATE (IWD,    KWD,    QWD,    EWD,    ITR,    QTRFN,  TTRFN,  CTRFN,  ELTRT,  ELTRB,  TRC,    JBTR,   QTRF,   CLRB)
-  DEALLOCATE (JBHA,   IHA,    FHA,    HAIC)                            !> sch 23May2025 Algal harvesting option variables. correction for HAIC 5/23/25
+  DEALLOCATE (JBHA,   IHA,    FHA)  !>,    HAIC)  !> sch 24July2025 Algal harvesting option variables. HAIC no longer applicable.
   DEALLOCATE (TTLB,   TTRB,   CLLB,   SRLB1,  SRRB1,  SRLB2,  SRRB2,  SRFJD1, SHADEI, SRFJD2, TOPO,   QSW,    CTR)    ! SW 10/17/05
   DEALLOCATE (H1,     H2,     BH1,    BH2,    BHR1,   BHR2,   AVH1,   AVH2,   SAVH2,  AVHR,   SAVHR,  CBODD, BHRATIO)
   DEALLOCATE (POINT_SINK,         HPRWBC,   READ_EXTINCTION, READ_RADIATION)
@@ -353,7 +353,7 @@ DEALLOCATE (LATERAL_PIPE)
   DEALLOCATE (ISO_EPIPHYTON,  VERT_EPIPHYTON,       LONG_EPIPHYTON)          !,     LATERAL_SPILLWAY, LATERAL_GATE,    LATERAL_PUMP
   DEALLOCATE (iso_macrophyte,  vert_macrophyte,       long_macrophyte, macrcvp,   macrclp)  ! cb 8/21/15
   DEALLOCATE (INTERP_HEAD,    INTERP_WITHDRAWAL,    INTERP_EXTINCTION,  INTERP_DTRIBS,    INTERP_TRIBS)   !LATERAL_PIPE,    
-  DEALLOCATE (INTERP_HARVESTING)                    !> sch 29Jan2025. Algal harvesting option variable.
+!  DEALLOCATE (INTERP_HARVESTING)                    !> sch 30Aug2025. Currently not used. Save for possible later use. Algal harvesting option variable.
   DEALLOCATE (INTERP_OUTFLOW, INTERP_INFLOW,        INTERP_METEOROLOGY, ZERO_SLOPE)
   DEALLOCATE (SEDIMENT_RESUSPENSION, ACTIVE_RULE_W2SELECTIVE)   !HYDRO_PLOT, CONSTITUENT_PLOT, DERIVED_PLOT,        
   DEALLOCATE (ORGPLD, ORGPRD, ORGPLP, ORGPRP, ORGNLD, ORGNRD, ORGNLP)
@@ -449,6 +449,8 @@ ENDIF
   ENDIF
   
 !  deallocate(isegvol,cdo,cpo4,cno3,cnh4,cchla,ctotp,cdos,cpo4s,cno3s,cnh4s,cchlas,ctotps,cgamma,ssedd,fishname,fishtempl,fishtemph,fishdo,habvol,phabvol,habvolbr,habvolwb,phabvolbr,phabvolwb,voltotbr,voltotwb)  
+
+!xxx  CLOSE(9922)   !< sch 31Aug2025. Close file used for harvesting variable debugging checks.
   
   RETURN
   

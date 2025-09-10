@@ -106,7 +106,7 @@ USE GLOBAL;     USE NAMESC; USE GEOMC;  USE LOGICC; USE PREC;  USE SURFHE;  USE 
   INTERP_TRIBS          = TRIC        == '      ON'; INTERP_DTRIBS      = DTRIC  == '      ON'
   INTERP_HEAD           = HDIC        == '      ON'; INTERP_INFLOW      = QINIC  == '      ON'
   INTERP_OUTFLOW        = STRIC       == '      ON'; INTERP_WITHDRAWAL  = WDIC   == '      ON'
-  INTERP_HARVESTING  = HAIC   == 1               !> sch 29Jan2025. Algal harvesting option ... initialize interpolation option
+! INTERP_HARVESTING  = HAIC   == 1               !> sch 30Aug2025 !> sch 30Aug2025. Currently not used. Save for possible later use. Algal harvesting option ... initialize interpolation option
   INTERP_GATE           = GTIC        == '      ON'       ! cb 8/13/2010
   !INTERP_METEOROLOGY    = METIC       == '      ON'; DOWNSTREAM_OUTFLOW = WDOC   == '      ON'
   INTERP_METEOROLOGY    = METIC       == '      ON'

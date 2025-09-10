@@ -442,7 +442,7 @@ MODULE LOGICC
   LOGICAL,           ALLOCATABLE, DIMENSION(:)   :: DAM_INFLOW,         DAM_OUTFLOW                                    !TC 08/03/04
   LOGICAL,           ALLOCATABLE, DIMENSION(:)   :: INTERP_METEOROLOGY, INTERP_INFLOW,    INTERP_DTRIBS,    INTERP_TRIBS
   LOGICAL,           ALLOCATABLE, DIMENSION(:)   :: INTERP_WITHDRAWAL,  INTERP_HEAD,      INTERP_EXTINCTION
-  LOGICAL,           ALLOCATABLE, DIMENSION(:)   :: INTERP_HARVESTING   !> sch 29Jan2025. Algal harvesting optin logic array switch for interpolation option.
+!  LOGICAL,           ALLOCATABLE, DIMENSION(:)   :: INTERP_HARVESTING   !> sch 30Aug2025. Currently not used. Algal harvesting optin logic array switch for interpolation option.
   LOGICAL,           ALLOCATABLE, DIMENSION(:)   :: VISCOSITY_LIMIT,    CELERITY_LIMIT,   IMPLICIT_AZ,      TRAPEZOIDAL !SW 07/16/04
 !  LOGICAL,           ALLOCATABLE, DIMENSION(:)   :: HYDRO_PLOT,         CONSTITUENT_PLOT, DERIVED_PLOT
   LOGICAL,           ALLOCATABLE, DIMENSION(:)   :: INTERP_GATE     ! cb 8/13/2010
@@ -684,7 +684,7 @@ Module MAIN
   INTEGER,       ALLOCATABLE, DIMENSION(:)     :: NPOINT, NL,     KTQIN,  KBQIN, ilayer    ! SW 1/23/06
   INTEGER,       ALLOCATABLE, DIMENSION(:)     :: ITR,    KTTR,   KBTR,   JBTR
   INTEGER,       ALLOCATABLE, DIMENSION(:)     :: IWD,    KWD,    JBWD
-  INTEGER,       ALLOCATABLE, DIMENSION(:)     :: IHA,    JBHA,   HAIC    !>  sch 29Jan2025. Algal harvesting option and associated variables related grid location (JBHA) and interpolation option (HAIC). 
+  INTEGER,       ALLOCATABLE, DIMENSION(:)     :: IHA,    JBHA         !>,   HAIC    !>  sch 24July2025. Algal harvesting option and associated variables related grid location (JBHA). Interpolation option (HAIC) no longer applicable. 
   INTEGER,       ALLOCATABLE, DIMENSION(:)     :: IWDO,   ITSR, JBTSR
   INTEGER,       ALLOCATABLE, DIMENSION(:)     :: ILAT,   JBDAM,  JSS
   INTEGER,       ALLOCATABLE, DIMENSION(:)     :: ICPL,   NACATD                                     

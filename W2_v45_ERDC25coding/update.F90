@@ -6,6 +6,7 @@ USE GLOBAL;     USE NAMESC; USE GEOMC;  USE LOGICC; USE PREC;  USE SURFHE;  USE 
   USE MACROPHYTEC; USE POROSITYC; USE ZOOPLANKTONC; USE CEMAVars, ONLY: SD_TC, JDAY_INIT  
   IMPLICIT NONE
   EXTERNAL RESTART_OUTPUT
+  INTEGER :: HARVEST_APPLIED               !< sch 27Aug2025 Local switch used to track if harvesting is applied.
 
 !***********************************************************************************************************************************
 !*                                       Task 2.7: Variable updates for next timestep                                             **
@@ -87,13 +88,45 @@ USE GLOBAL;     USE NAMESC; USE GEOMC;  USE LOGICC; USE PREC;  USE SURFHE;  USE 
                   SEDC(K,I) = DMAX1(SEDC(K,I),0.0D0)
                 END IF
 
+!> sch 27Aug2025. Start algal harvesting option. 
+!  Apply the harvesting reduction while in the loop through the algae state variables.
+!  Harvesting is instananeous, so apply it directly to the current algae concentrations in the C1 array that stores state variable concentrations.
+!  Also, do the check for low DO - high mortality minimum algae in here (more efficient).
+                IF (CN(JC) >= NAS   .AND. CN(JC) <= NAE) THEN            ! Check to see if JC is one of the algae state variables.			  
+		 	      HARVEST_APPLIED = 0              !> Make sure switch is zero, so that harvesting can occur
+                  IF (HARVESTING) THEN             !> sch 28Jan2025. If algal harvesting is active, then locate and apply the user-input fractional reductions to their associated segments.
+                    DO JHA=1,NHF                            
+                      IF (FHA(JHA) /= 0.0) THEN
+                        IF (JB == JBHA(JHA) .AND. I == IHA(JHA)) THEN
+!xxx                            write (9922, *) CN(JC), K, I, JHA, C1(K,I,CN(JC)), FHA(JHA)
+						    C1(K,I,CN(JC)) = C1(K,I,CN(JC)) * (1.0 - FHA(JHA))               ! Apply harvesting to current C1 array algae concentrations. Let C1S and C2 updates occur as normal, below.
+						    HARVEST_APPLIED = 1
+!xxx					        write (9922, *) C1(K,I,CN(JC)), HARVEST_APPLIED							
+				 	    END IF
+                      END IF
+			        END DO
+                    DO JHA=1,NHF                            
+	                  IF (CN(JC) == NAE .AND. HARVEST_APPLIED == 1) THEN !> sch 29May2025 Set current segment-specific harvesting fraction to zero once applied to all algal state variables
+                        FHA(JHA) = 0.0
+		    	        FHASAV(JHA) = 0.0           !> sch 29May2025 Set saved value to zero too ... as a precaution (might not be necessary)
+!xxx		 		        write (9922, *) JHA, FHA(JHA), FHASAV(JHA)
+				      END IF
+				    END DO
+				    HARVEST_APPLIED = 0             !> sch 24July2025 Reset the harvesting check switch
+                  END IF
+
+                  IF(C1(K,I,CN(JC)) <ALG_MIN) C1(K,I,CN(JC))  = ALG_MIN    !> sch 31AugJan2025. More efficient Low DO - high mortality option. Ensure a nominal standing crop of algae (ALG_MIN) is maintained.
+
+                END IF				
+!> sch 31Aug2025. End algal harvesting option and the check for minimum algae 
+
                 CSSB(K,I,CN(JC)) = 0.0D0
                 C1S(K,I,CN(JC))  = C1(K,I,CN(JC))
                 C2(K,I,CN(JC))   = DMAX1(C1(K,I,CN(JC)),0.0D0)
  
-                DO J=1,NAL                                               !> sch 25Jan2025. Low DO - high mortality option. Loop through the algal state variables.
-                  IF(ALG(K,I,J)<ALG_MIN) ALG(K,I,J) = ALG_MIN            !> sch 25Jan2025. Low DO - high mortality option. Ensure a nominal standing crop of algae (ALG_MIN) is maintained.
-                END DO                                                   !> sch 25Jan2025. Low DO - high mortality option. End loop through the algal state variables.
+!                DO J=1,NAL                                               !> sch 25Jan2025. Low DO - high mortality option. Loop through the algal state variables.
+!                  IF(ALG(K,I,J)<ALG_MIN) ALG(K,I,J) = ALG_MIN            !> sch 25Jan2025. Low DO - high mortality option. Ensure a nominal standing crop of algae (ALG_MIN) is maintained.
+!                END DO                                                   !> sch 25Jan2025. Low DO - high mortality option. End loop through the algal state variables.
 				
              END DO
             END DO

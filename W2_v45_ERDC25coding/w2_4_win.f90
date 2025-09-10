@@ -75,6 +75,7 @@ write(CON,*)'INTEL_COMPILER_BUILD_DATE:',INTEL_COMPILER_BUILD_DATE
 write(CON,*)'CE-QUAL-W2 Version compile date:',BUILDTIME
 close(CON)
 
+!xxx  OPEN (9922,FILE='HarvestDebug.txt',STATUS='unknown')  !> sch 31Aug2025 Algal harvesting debug output.
 
 ! open ancillary control file for fish bioenergetics !mlm bioexp
   BIOEXP = .FALSE.              ! INITIALIZE LOGICAL VARIABLE THIS IS READ IN THE CONTROL FILE

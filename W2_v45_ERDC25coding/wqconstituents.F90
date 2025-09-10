@@ -12,7 +12,6 @@ USE GLOBAL;     USE NAMESC; USE GEOMC;  USE LOGICC; USE PREC;  USE SURFHE;  USE 
   EXTERNAL RESTART_OUTPUT
   REAL :: TPALG,TNALG,TPZ,TNZ,TPBOD,TNBOD
 
-
       IF(MACROPHYTE_ON.AND.UPDATE_KINETICS)CALL POROSITY 
       IF(UPDATE_KINETICS)IMM=IMM+1   ! FOR OUTPUT OF REDUCE GAS TRANSFER FROM ALGAE ACCUMULATION IN SURFACE LAYER
       DO JW=1,NWB
@@ -135,7 +134,10 @@ USE GLOBAL;     USE NAMESC; USE GEOMC;  USE LOGICC; USE PREC;  USE SURFHE;  USE 
               IF (JC >= NSSS  .AND. JC <= NSSE)  CALL SUSPENDED_SOLIDS(JC-NSSS+1)
               IF (JC >= NAS   .AND. JC <= NAE)THEN
                 IF(ALG_CALC(JC-NAS+1))CALL ALGAE(JC-NAS+1)
+				
               ENDIF
+			  
+			  
               IF (JC >= NBODS .AND. JC <= NBODE)THEN
                 DO JCB=1,NBOD       ! VARIABLE STOICHIOMETRY FOR CBOD, CB 6/6/10
                   IF(BOD_CALC(JCB))THEN
@@ -225,21 +227,6 @@ USE GLOBAL;     USE NAMESC; USE GEOMC;  USE LOGICC; USE PREC;  USE SURFHE;  USE 
                 END IF
               END DO
             END IF
-
-!> sch 29Jan2025. Start algal harvesting option
-            IF (HARVESTING) THEN                                                              !> sch 28Jan2025. If algal harvesting is active, then locate and apply the user-input fractional reductions to their associated segments.
-              DO JHA=1,NHF                            
-                IF (FHA(JHA) /= 0.0) THEN
-                  IF (JB == JBHA(JHA)) THEN
-                    I = MAX(CUS(JBHA(JHA)),IHA(JHA))
-                    DO K=KTW(JHA),KBW(JHA)            
-                      IF (JC >= NAS .AND. JC <= NAE) CSSB(K,I,JC) = CSSB(K,I,JC) * FHA(JHA)   !> sch 28Jan2025. Apply segment/time-specific harvesting fraction to algal groups in each layer.
-                    END DO
-                  END IF
-                END IF
-              END DO
-            END IF                                                                            !> sch 28Jan2025. End of algal harvesting logic and computation. 
-!> sch 29Jan2025. End algal harvesting option
 
             IF (PRECIPITATION(JW)) THEN
               DO I=IU,ID    !CONCURRENT (I=IU:ID)                                  !FORALL

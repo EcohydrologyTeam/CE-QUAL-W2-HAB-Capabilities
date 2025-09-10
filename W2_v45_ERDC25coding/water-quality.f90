@@ -686,7 +686,7 @@ ENTRY KINETIC_RATES
         ALLIM(K,I,JA)  = 2.718282*(EXP(-LAM2)-EXP(-LAM1))/(GAMMA(K,I)*H2(K,I))
         IF (AHSP(JA)  /= 0.0 .and. po4_calc) APLIM(K,I,JA) =  FDPO4*PO4(K,I)/(FDPO4*PO4(K,I)+AHSP(JA)+NONZERO)       ! cb 10/12/11
         IF (AHSN(JA)  /= 0.0 .and. n_calc) ANLIM(K,I,JA) = (NH4(K,I)+NO3(K,I))/(NH4(K,I)+NO3(K,I)+AHSN(JA)+NONZERO)  ! cb 10/12/11
-        IF ((NH4(K,I)+NO3(K,I)) < CRIT_TIN(JA)) THEN                             !> sch 25Jan2025. Check if N-fixation alternative option is active (e.g., CRIT_TIN>0)
+        IF ((NH4(K,I)+NO3(K,I)) < CRIT_TIN(JA) .and. n_calc) THEN                !> sch 26Aug2025. Check if N-fixation alternative option is active (e.g., CRIT_TIN>0)
 		  ANLIM(K,I,JA) = (NH4(K,I)+NO3(K,I))/(NH4(K,I)+NO3(K,I)+0.0+NONZERO)    !> sch 25Jan2025. N-fixation option active ... recalculate N limination based on ZERO for AHSN.
 		  ENDIF                                                                  !> sch 25Jan2025. End N-fixation option check.
         IF (AHSSI(JA) /= 0.0 .and. DSI_CALC) ASLIM(K,I,JA) =  DSI(K,I)/(DSI(K,I)+AHSSI(JA)+NONZERO)                  ! cb 10/12/11
@@ -921,6 +921,12 @@ ENTRY KINETIC_RATES
       ENDIF
     end do
     ENDIF
+
+
+
+
+
+
   END DO    ! ALGAE LOOP
    if(algae_settling_exist) iday=jday
       
@@ -1497,7 +1503,8 @@ ENTRY AMMONIUM
         ELSE
         NH4PR = NH4(K,I)/(NH4(K,I)+NO3(K,I)+NONZERO)
         ENDIF
-        IF (AHSN(JA) > 0.0) NH4AG(K,I) = NH4AG(K,I)+AGR(K,I,JA)*ALG(K,I,JA)*AN(JA)*NH4PR
+!<        IF (AHSN(JA) > 0.0) NH4AG(K,I) = NH4AG(K,I)+AGR(K,I,JA)*ALG(K,I,JA)*AN(JA)*NH4PR		
+        IF (AHSN(JA) > 0.0 .AND. CRIT_TIN(JA) < (NH4(K,I)+NO3(K,I))) NH4AG(K,I) = NH4AG(K,I)+AGR(K,I,JA)*ALG(K,I,JA)*AN(JA)*NH4PR  !< sch 26Aug2025. Check for alternate N-fixation option triggered by low TIN. 
         NH4AR(K,I) = NH4AR(K,I)+ARR(K,I,JA)*ALG(K,I,JA)*AN(JA)
       ENDIF
       END DO
@@ -1570,7 +1577,8 @@ ENTRY NITRATE
         NO3PR = 1.0-NH4(K,I)/(NH4(K,I)+NO3(K,I)+NONZERO)
         IF (ANEQN(JA).EQ.2)  NO3PR      = 1.0-(NH4(K,I)*NO3(K,I)/((ANPR(JA)+NH4(K,I))*(ANPR(JA)+NO3(K,I)))+NH4(K,I)*ANPR(JA)       &
                                           /((NO3(K,I)+NH4(K,I)+NONZERO)*(ANPR(JA)+NO3(K,I))))
-        IF (AHSN(JA).GT.0.0) NO3AG(K,I) = NO3AG(K,I)+AGR(K,I,JA)*ALG(K,I,JA)*NO3PR*AN(JA)
+!<        IF (AHSN(JA).GT.0.0) NO3AG(K,I) = NO3AG(K,I)+AGR(K,I,JA)*ALG(K,I,JA)*NO3PR*AN(JA)
+        IF (AHSN(JA) .GT. 0.0 .AND. CRIT_TIN(JA) < (NH4(K,I)+NO3(K,I))) NO3AG(K,I) = NO3AG(K,I)+AGR(K,I,JA)*ALG(K,I,JA)*NO3PR*AN(JA)  !< sch 26Aug2025. Check for alternate N-fixation option triggered by low TIN. 
       ENDIF
       END DO
       DO JE=1,NEP
@@ -1764,7 +1772,7 @@ ENTRY ALGAE (J)
 	  AGZT(K,I,J) = AGZT(K,I,J) + AGZ(K,I,J,JZ)                       ! CB 5/26/07
 	  END DO
 	  ENDIF
-      ASS(K,I,J) = ASR(K,I,J)+(AGR(K,I,J)-AER(K,I,J)-AMR(K,I,J)-ARR(K,I,J))*ALG(K,I,J)-AGZT(K,I,J)	
+      ASS(K,I,J) = ASR(K,I,J)+(AGR(K,I,J)-AER(K,I,J)-AMR(K,I,J)-ARR(K,I,J))*ALG(K,I,J)-AGZT(K,I,J)		  
     END DO
   END DO
 RETURN
