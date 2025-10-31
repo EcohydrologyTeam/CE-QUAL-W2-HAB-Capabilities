@@ -1,9 +1,0 @@
-        !COMPILER-GENERATED INTERFACE MODULE: Wed Jun 25 13:39:36 2025
-        ! This source file is for reference only and may not completely
-        ! represent the generated interface used by the compiler.
-        MODULE LAYERADDSUB__genmod
-          INTERFACE 
-            RECURSIVE SUBROUTINE LAYERADDSUB
-            END SUBROUTINE LAYERADDSUB
-          END INTERFACE 
-        END MODULE LAYERADDSUB__genmod

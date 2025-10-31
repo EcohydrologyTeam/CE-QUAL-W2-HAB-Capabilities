@@ -1,0 +1,21 @@
+All,
+ 
+Here is the example algal harvesting W2 test run folder that I last run before sending the input files for this to Mike for testing at his end. I’ve also separately attached zip files with just the two input files used by the harvesting option (these are also in the run folder) and the latest version of the modified W2 executable (also in the run folder). If you have any questions or if I’ve left out something that is needed, please let me know. Also, if you have any trouble retrieving these files from the links, let me know.
+ 
+zip icon CamancheR2009_run-folder_algal-harvesting_072425.zip
+zip icon algal_harvesting_example_inputs_072425.zip
+zip icon w2_v45_64_LimnoTech_072425exe.zip
+ 
+Thanks,
+Scott
+__________________________________________________________
+Scott C. Hinz         
+Senior Environmental Scientist
+ 
+email:shinz@limno.com
+Office: 734-332-1200 
+4008 Greystone Dr, Austin, TX  78731
+LimnoTech             www.limno.com 
+Water Environment | Scientists Engineers
+ 
+ 
