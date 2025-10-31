@@ -18,6 +18,7 @@ The goal was to verify if Detroit Lake model results could be reproduced with Li
 ## Results
 
 ### PSU-compiled v4.5 vs LimnoTech's v4.5 with HAB capabilities
+
 - These two versions yield yield similar results.
 - Observed differences may be related to when the computed timesteps sharply decline. Potential timestep violations may be causing unexpected perturbations and slight shifts in when outputs are generated. This may then result in small differences in the output values.
 - In general, these differences don't seem like a major issue.

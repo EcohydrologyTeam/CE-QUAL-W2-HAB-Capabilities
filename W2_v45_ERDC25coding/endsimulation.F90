@@ -271,13 +271,14 @@ IF (ERROR_OPEN) THEN                                           ! modified to be 
   DEALLOCATE (LDOMND,  LRDOMND, RDOMND,  LPOMND,  LRPOMND, RPOMND,  LPOMNHD, RPOMNHD) 
   DEALLOCATE (LDOMCD,  LRDOMCD, RDOMCD,  LPOMCD,  LRPOMCD, RPOMCD,  LPOMCHD, RPOMCHD)
   DEALLOCATE (QSTRSAV, QWDSAV)                                                                                        !SR 06/29/2021
-
+  DEALLOCATE (FHASAV)                                  !> sch 29Jan2025. Algal harvesting option.
   DEALLOCATE (CO2R,   SROC,   O2ER,   O2EG,   CAQ10,  CADK,   CAS,    DTRC)    ! !BODP,   BODN,   BODC,   KBOD,   TBOD,   RBOD,  sw 8/2024
   DEALLOCATE (LDOMDK, RDOMDK, LRDDK,  OMT1,   OMT2,   OMK1,   OMK2,   LPOMDK, RPOMDK, LRPDK,  POMS,   ORGP,   ORGN,   ORGC)
   DEALLOCATE (RCOEF1, RCOEF2, RCOEF3, RCOEF4, ORGSI,  NH4T1,  NH4T2,  NH4K1,  NH4K2,  NO3T1,  NO3T2,  NO3K1,  NO3K2,  NSTR)
   DEALLOCATE (DSIR,   PSIS,   PSIDK,  PARTSI, SODT1,  SODT2,  SODK1,  SODK2,  O2NH4,  O2OM,   O2AR,   O2AG,   CG1DK,  CGS)
   DEALLOCATE (CGQ10,  CG0DK,  CGLDK, CGKLF,CGCS,CGR,CUNIT,  CUNIT1, CUNIT2, CUNIT3,CAC,    INCAC,  TRCAC,  DTCAC,  PRCAC,  CNAME,  CNAME1, CNAME2, CMULT) !LCJ 2/26/15
   DEALLOCATE (CN,     INCN,   DTCN,   PRCN,   CSUM,   DLTMAX, QWDO,   TWDO,   SSS,    SEDRC,  TAUCR,  XBR, FNO3SED, DYNSTRUC, CDNN)
+  DEALLOCATE (FHAO)                                    !> sch 29Jan2025. Algal harvesting option.
 !  DEALLOCATE (SSFLOC, FLOCEQN)                                                 
   !DEALLOCATE (SEDCC1,SEDCC2, ICEQSS,SDK1,sdk2,SEDCI1,SEDCI2,SEDPRC1,SEDPRC2,SEDVP1,SEDVP2,SED1,SED2) 
   !DEALLOCATE (SEDCC1,SEDCC2, ICEQSS,SDK1,sdk2,SEDCI1,SEDCI2,SEDPRC1,SEDPRC2,SEDVP1,SEDVP2,SED1,SED2,fsedc1,fsedc2,pbiom,nbiom,cbiom)   ! Amaila, cb 6/7/17
@@ -301,6 +302,8 @@ IF (ERROR_OPEN) THEN                                           ! modified to be 
   DEALLOCATE (ET1,    ET2,    ET3,    HNAME,  FMTH,    KFAC,  KFNAME, KFNAME2,KFCN,   C2I,    TRCN,   CDN,    CDNAME, CDNAME1, CDNAME2,CDMULT)
   DEALLOCATE (CMBRS,  CMBRT,  FETCHU, FETCHD, IPRF,   ISNP,   ISPR,   BL,     LFPR,   DO3,    SED,    TKE,    PALT)
   DEALLOCATE (ADX,    DO1,    DO2,    B,      CONV,   CONV1,  EL,     DZ,     DZQ,    DX,     SAZ,    T1,TSS,QSS,BNEW, ILAYER, SELWS)   ! SW 1/23/06
+  DEALLOCATE (DO4,    DELT_LOW_DO,    CRIT_T, AM_LOW_DO)      !> sch 29Jan2025. Low DO - high mortality option variable(s).
+  DEALLOCATE (CRIT_TIN)                                       !> sch 29Jan2025. Alternative N-fixation option variable(s). *** !, CRIT_NFIX_ALG)  ** minimum crop is sort of duplicative, not needed here. Discuss later. sh
   DEALLOCATE (P,      SU,     SW,     BB,     BR,     BH,     BHR,    VOL,    HSEG,   DECAY,  FPFE,   FRICBR, UXBR,   UYBR)
   DEALLOCATE (DEPTHB, DEPTHM, FPSS,   TUH,    TDH,    TSSUH1, TSSUH2, TSSDH1, TSSDH2, SEDVP,  H,      EPC)
   DEALLOCATE (TVP,    QINF,   QOUT,   KOUT,   VOLUH2, VOLDH2, CWDO,   CDWDO,  CWDOC,  CDWDOC, CDTOT,  CPR,    CPB,    COUT)
@@ -318,6 +321,7 @@ IF (ERROR_OPEN) THEN                                           ! modified to be 
   DEALLOCATE (B2SP,   AGASSP, BGASSP, CGASSP, EQSP,   GASSPC, JBUSP,  JBDSP,  STRTPU, ENDPU,  EONPU,  EOFFPU, QPU,    PPUC)
   DEALLOCATE (IUPU,   IDPU,   EPU,    ETPU,   EBPU,   KTPU,   KBPU,   JWUPU,  JWDPU,  JBUPU,  JBDPU,  PUMPON, KTW,    KBW, PUMP_DOWNSTREAM)
   DEALLOCATE (IWD,    KWD,    QWD,    EWD,    ITR,    QTRFN,  TTRFN,  CTRFN,  ELTRT,  ELTRB,  TRC,    JBTR,   QTRF,   CLRB)
+  DEALLOCATE (JBHA,   IHA,    FHA)  !>,    HAIC)  !> sch 24July2025 Algal harvesting option variables. HAIC no longer applicable.
   DEALLOCATE (TTLB,   TTRB,   CLLB,   SRLB1,  SRRB1,  SRLB2,  SRRB2,  SRFJD1, SHADEI, SRFJD2, TOPO,   QSW,    CTR)    ! SW 10/17/05
   DEALLOCATE (H1,     H2,     BH1,    BH2,    BHR1,   BHR2,   AVH1,   AVH2,   SAVH2,  AVHR,   SAVHR,  CBODD, BHRATIO)
   DEALLOCATE (POINT_SINK,         HPRWBC,   READ_EXTINCTION, READ_RADIATION)
@@ -349,6 +353,7 @@ DEALLOCATE (LATERAL_PIPE)
   DEALLOCATE (ISO_EPIPHYTON,  VERT_EPIPHYTON,       LONG_EPIPHYTON)          !,     LATERAL_SPILLWAY, LATERAL_GATE,    LATERAL_PUMP
   DEALLOCATE (iso_macrophyte,  vert_macrophyte,       long_macrophyte, macrcvp,   macrclp)  ! cb 8/21/15
   DEALLOCATE (INTERP_HEAD,    INTERP_WITHDRAWAL,    INTERP_EXTINCTION,  INTERP_DTRIBS,    INTERP_TRIBS)   !LATERAL_PIPE,    
+!  DEALLOCATE (INTERP_HARVESTING)                    !> sch 30Aug2025. Currently not used. Save for possible later use. Algal harvesting option variable.
   DEALLOCATE (INTERP_OUTFLOW, INTERP_INFLOW,        INTERP_METEOROLOGY, ZERO_SLOPE)
   DEALLOCATE (SEDIMENT_RESUSPENSION, ACTIVE_RULE_W2SELECTIVE)   !HYDRO_PLOT, CONSTITUENT_PLOT, DERIVED_PLOT,        
   DEALLOCATE (ORGPLD, ORGPRD, ORGPLP, ORGPRP, ORGNLD, ORGNRD, ORGNLP)
@@ -444,6 +449,8 @@ ENDIF
   ENDIF
   
 !  deallocate(isegvol,cdo,cpo4,cno3,cnh4,cchla,ctotp,cdos,cpo4s,cno3s,cnh4s,cchlas,ctotps,cgamma,ssedd,fishname,fishtempl,fishtemph,fishdo,habvol,phabvol,habvolbr,habvolwb,phabvolbr,phabvolwb,voltotbr,voltotwb)  
+
+!xxx  CLOSE(9922)   !< sch 31Aug2025. Close file used for harvesting variable debugging checks.
   
   RETURN
   
