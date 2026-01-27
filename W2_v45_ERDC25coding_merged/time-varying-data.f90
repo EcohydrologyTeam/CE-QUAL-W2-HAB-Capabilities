@@ -476,7 +476,8 @@ SUBROUTINE TIME_VARYING_DATA
     READ (HAF,*) NXFHA2,(FHANX(JHA),JHA=1,NHF)                         !> Algal harvesting option. JDAY for removal, segment-specific fractions of algae removed. sch 29Jan2025. 
 !xxx    write (9922,*) NXFHA2,(FHANX(JHA),JHA=1,NHF)
     DO JHA = 1,NHF 
-      FHA(JHA)  = FHANX(JHA)
+      FHANX(JHA) = MIN(MAX(FHANX(JHA), 0.0), 1.0)                      !> Clamp to [0,1] to prevent invalid input fractions as per ERDC review. sch 22Jan2026
+	  FHA(JHA)  = FHANX(JHA)
       FHAO(JHA) = FHANX(JHA)
     END DO
     READ (HAF,*) NXFHA1,(FHANX(JHA),JHA=1,NHF)                         !> Algal harvesting option. JDAY for next removal, segment-specific fractions of algae removed. sch 29Jan2025. 
@@ -1704,6 +1705,7 @@ ENTRY READ_INPUT_DATA (NXTVD)
     DO WHILE (JDAY >= NXFHA1)
       NXFHA2 = NXFHA1
       DO JHA=1,NHF
+        FHANX(JHA) = MIN(MAX(FHANX(JHA), 0.0), 1.0)                      !> Clamp to [0,1] to prevent invalid input fractions as per ERDC review. sch 22Jan2026
         FHA(JHA)  = FHANX(JHA)
         FHAO(JHA) = FHANX(JHA)
       END DO
