@@ -105,13 +105,13 @@ USE GLOBAL;     USE NAMESC; USE GEOMC;  USE LOGICC; USE PREC;  USE SURFHE;  USE 
 				 	    END IF
                       END IF
 			        END DO
-                    DO JHA=1,NHF                            
-	                  IF (CN(JC) == NAE .AND. HARVEST_APPLIED == 1) THEN !> sch 29May2025 Set current segment-specific harvesting fraction to zero once applied to all algal state variables
-                        FHA(JHA) = 0.0
-		    	        FHASAV(JHA) = 0.0           !> sch 29May2025 Set saved value to zero too ... as a precaution (might not be necessary)
+!xxx                    DO JHA=1,NHF                            
+!xxx	                  IF (CN(JC) == NAE .AND. HARVEST_APPLIED == 1) THEN !> sch 29May2025 Set current segment-specific harvesting fraction to zero once applied to all algal state variables
+!xxx                        FHA(JHA) = 0.0
+!xxx		    	         FHASAV(JHA) = 0.0           !> sch 29May2025 Set saved value to zero too ... as a precaution (might not be necessary)
 !xxx		 		        write (9922, *) JHA, FHA(JHA), FHASAV(JHA)
-				      END IF
-				    END DO
+!xxx				      END IF
+!xxx				    END DO
 				    HARVEST_APPLIED = 0             !> sch 24July2025 Reset the harvesting check switch
                   END IF
 
@@ -134,6 +134,14 @@ USE GLOBAL;     USE NAMESC; USE GEOMC;  USE LOGICC; USE PREC;  USE SURFHE;  USE 
         END DO
       END DO
     END IF
+	
+!> Reset harvesting fractions after ALL waterbodies, branches, segments, and constituents processed - per ERDC review. sch 22Jan2026
+    IF (HARVESTING) THEN
+	DO JHA=1,NHF
+        FHA(JHA) = 0.0
+        FHASAV(JHA) = 0.0
+      END DO
+    END IF	
 
     !DO JW = 1,NWB
     !  KT = KTWB(JW)
