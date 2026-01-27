@@ -115,7 +115,7 @@ MODULE GLOBAL
   REAL,              ALLOCATABLE, DIMENSION(:,:,:)   :: ELLIM,  EPLIM,  ENLIM,  ESLIM
   INTEGER                                            :: W2ERR=33,  WRN=32
   INTEGER                                            :: IMX,    KMX,    NBR,    NTR,    NWD,    NWB,    NCT,    NBOD, NTR1     ! SW 2/17/2021
-  INTEGER                                            :: NHF                             !> sch 28Jan2025. Algal harvesting option variable. Number of segements with user-specified algal harvesting fractions.
+  INTEGER                                            :: NHF                   !> sch 22Jan2026. Algal harvesting option variables. Number of segements with user-specified harvesting fractions, and a loop counter.
   INTEGER                                            :: NST,    NSP,    NGT,    NPI,    NPU,    NWDO,   NIKTSR, NUNIT
   INTEGER                                            :: JW,     JB,     JC,     IU,     ID,     KT,     I,      JJB
   INTEGER                                            :: NOD,    NDC=27, NAL,    NSS,    NHY=15, NFL=142,NEP,    NEPT
