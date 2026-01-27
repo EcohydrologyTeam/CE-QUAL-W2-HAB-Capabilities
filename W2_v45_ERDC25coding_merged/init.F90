@@ -37,7 +37,7 @@ USE GLOBAL;     USE NAMESC; USE GEOMC;  USE LOGICC; USE PREC;  USE SURFHE;  USE 
   sdfirstadd=.true.   ! cb 9/3/17
   BR_NOTECPLOT=.TRUE.    ! SW 8/27/2019
   QWDSAV = 0.0D0;                                                                                                     !SR 06/29/2021
-  FHA    = 0.0D0;  FHASAV = 0.0D0                   !> sch 29Jan2025. Algal harvesting option variables.    
+  FHA    = 0.0D0;  FHASAV = 0.0D0;  JBHA = 0                   !> sch 22Jan2026. Algal harvesting option variables.    
 
   IF (.NOT. RESTART_IN) THEN
     BR_INACTIVE=.FALSE.; WARNING_OPEN          = .FALSE.;JDMIN=0; EPC=0.0; NXTMUK=TMSTRT 
